@@ -1,0 +1,49 @@
+%%% -*-LaTeX-*-
+%%% This is the abstract for the thesis.
+%%% It is included in the top-level LaTeX file with
+%%%
+%%%    \preface    {abstract} {Abstract}
+%%%
+%%% The first argument is the basename of this file, and the
+%%% second is the title for this page, which is thus not
+%%% included here.
+%%%
+%%% The text of this file should be about 350 words or less.
+
+% Summary from Proposal
+%Computer clustering is the grouping of servers to increase scalability and
+%offer a unit of orchestration. One crucial component of orchestration is
+%scheduling, i.e. finding a suitable set of nodes in the cluster to run a job.
+%In this work, we aim to leverage cross-cluster communication and build a
+%system that allows clusters to trade resources and improve overall
+%performance. We evaluate this by running simulated experiments to find
+%workloads and policies that would benefit from such a system, and test various
+%policies on available production workloads.
+
+% overview and relevance
+%The need for more compute power resulted in creating distributed systems
+%distributed systems complexity demanded infrastructure systems to automate
+%tasks, multi cluster environments are being used more than ever. Some reasons:
+%scalability issues, geographical constraints, multi-provider strategies,
+%orchestrate accross various locations, unify access to infrastructure, migrate
+%apps from one cluster to the other, placement optimization, ...
+
+%% pain point / motivate the problem
+%Limitations: pod placements, resource fragmentation, unused resources,
+%increased cost, ... Proposed solution To ease the limitations while still
+%reaping the benefits, we propose CloudStreet, a per cluster trading mechanism
+%allowing clusters to exchange resources between each other and optimize their
+%performance with user specified policies. Results Our initial results run a
+%simulator shows promising outcomes
+
+%% Actual Start
+Multi-cluster topologies are becoming increasingly common due to factors like
+scalability, geographical considerations, multi-provider strategies, and
+workload partitioning. While the paradigm is promising, multi-cluster setups
+encounter challenges, notably resource fragmentation, increased cost, and
+reduced resource utilization. To mitigate these issues, we propose an
+intra-cluster resource trading mechanism. Controlled by user defined policies,
+the system facilitates peer-to-peer resource exchange among clusters by
+allowing foreign clusters to use local resources while retaining ownership. We
+evaluate the mechanism by running synthetic and production workloads on a
+multi-cluster simulator. [WRITE RESULTS HERE]
