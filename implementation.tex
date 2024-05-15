@@ -2,26 +2,59 @@
 
 \chapter{Implementation}
 
-This is a chapter.
+\section{Thesis Plan}
+% the goal is to test different policies and see which ones, coupled with the appropriate workload, 
+% achieves one of the goals stated in the thesis statement.
 
-\blah
+To demonstrate the validity of the proposed mechanism, we plan to test different trading policies 
+coupled with different workloads on a multi-cluster scheduling simulator \cite{sched-github}.
 
-\blah
+\subsection{Simulator}
+It simulates a multi-cluster environment, where each cluster can be run locally or on different nodes. 
+Clusters communicate through http, and jobs are simulated as chunks of time and resources scheduled on the clusters, 
+easing the implementation of trading resources. 
 
-\blah
+\subsubsection{Components}
+\begin{enumerate}
+    \item Registry: The registry tracks the availability of the clusters in the environment, facilitating service discovery. 
+    \item Scheduler: The main component of the simulator, it runs jobs with specific size and time, and enacts the policies 
+    attached to it.
+    \item Client: Sends jobs to the schedulers.
+\end{enumerate}
+\subsubsection{Current State}
+The simulator is functional, jobs are locally scheduled in FIFO, and the first policy implemented 
+is attempting to improve resource utilization and decrease job queueing time, similar to the example 
+in the methodology \ref{example}. Workloads are created synthetically using probability distributions. 
+Moreover, OpenTelemetry \cite{opentelemetry} and Jaeger \cite{jaeger} are used to record metrics 
+and traces, but still don't cover the scope of the whole project.
+\\Next steps in development include:
+\begin{enumerate}
+    \item Develop policies' pluggable interface
+    \item Production workload porting
+    \item Complete telemetry and logging
+\end{enumerate}
+\subsection{Evaluation}
+\subsubsection{Workloads}
+We have two sources of workloads passed to the Client:
+\begin{enumerate}
+    \item Synthetic: workloads created from probability distributions
+    \item Publicly available production workloads: 
+        \begin{enumerate}
+            \item Google Trace \cite{wilkes_yet_2020} \cite{borg}: It includes traces to 8 different clusters. 
+            \item Alibaba Trace \cite{alibaba-latest} \cite{alibabaclusterdata_2023}: Includes traces of different clusters with distinct workloads.        
+        \end{enumerate}
+\end{enumerate}
 
-\section{More on the topic}
+\subsubsection{Policies}
+We provided example policies in the methodology section and plan to expand on them, finding policies that  
+fit specific workloads to optimize the performance metrics, and will be evaluated accordingly. 
 
-\blah
-
-\blah
-
-\section{Even more on the topic}
-
-\blah
-
-\blah
-
-\section{Summary and conclusions}
-
-\blah
+\subsubsection{Measurments}
+We plan to measure the optimized-for metric per policy-workload couple. 
+Metrics are both overall and per-cluster and include:
+\begin{enumerate}
+    \item Average JCT \ref{jct}
+    \item Resource utilization \ref{example} 
+    \item Cost \ref{cost} 
+    \item Scheduling overhead \ref{sched-overhead}
+\end{enumerate}
