@@ -2,51 +2,113 @@
 
 \chapter{Introduction}
 
-This is a chapter.  Remember  that there should \emph{always}
-be at least of few lines of prose after each sectional heading:
-failure to do so is a disservice to your readers, and also
-produces incorrect vertical spacing.
+% clusters
+As modern computer systems and their workloads scaled, running on a single
+machine was no longer feasible. Distributed systems became an integral field to
+keep the growth and innovation running. However, it became almost impossible to
+manually manage systems at this scale, and a need to orchestrate the underlying
+infrastructure emerged. 
 
+% containrization
+As the infrastructure became more heterogenous, consistency accross different
+environments became crucial. Containrization came in place as a way to ensure
+that applications runs consistently accross a spectrum of environments. 
 
-\section{Motivation and Related Work}
-Data center utilization has been widely studied, with average server utilization in most data centers being low, 
-ranging from 10\% to 50\%
-% this paper cites other papers for the percentage of utilization 
-\cite{lo_heracles_2015}. 
-To combat low server utilization and diverse users' workloads, systems have been developed to allow diverse workloads to run 
-on the same cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate}. 
-However, this causes increased interference between jobs, thus, 
-facilities are also equipped with different clusters for different purposes and teams \cite{patel_what_2022, li_lyra_2023}. 
-For example, 50\% of Kubernetes \cite{borg}
-end users have 10+ clusters \cite{noauthor_cncf_2023} 
-, with companies like Mercedes nearing 1000 clusters \cite{noauthor_mercedes-benz_2023}.
-Isolation, location, and scalability are among other reasons organizations deploy multiple clusters \cite{google-cloud-blog}.
-However, separating resources comes with a cost. Resource partitioning degrades performance and increases overhead \cite{adv-dis-mutli}.\\ 
+% container orchestration systems
+As such, container orchestration systems like Kubernetes (K8s), Docker Swarm,
+and Nomad [CITE] became widely used and adopted for offering the necessary
+tools to manage the infrastructure while maintaining a high level of portability
+and resource utilization. 
+
+% Solutions on one cluster systems
+Scheduling Jobs on computer clusters, which is the decision of choosing on
+which node in a cluster this container is going to run, is a throughly studied
+field. Researchers built systems optimizing different aspects of clluster
+scheduling. To combat low server utilization and diverse users' workloads,
+systems have been developed to allow diverse workloads to run on the same
+cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate} with
+average server utilization in some data centers ranging from 10\% to 50\%
+\cite{lo_heracles_2015}. Distributed scheduling in a single cluster was
+introduced to overcome the limitations of centralized schedulers, further
+reducing latency and improving performance on heterogenous workloads. 
+%[CITE
+%https://www.usenix.org/conference/osdi14/technical-sessions/presentation/boutin,
+%OMEGA]
+
+% one cluster limitations
+Running multiple workloads on a single cluster introduces a new set of problems
+like increased interference between jobs. 
+%[CITE https://ieeexplore.ieee.org/abstract/document/8397647]
+Distributed schedulers make less than optimal scheduling decisions due to their
+limited visibility of cluster resources
+%[CITE
+%https://www.usenix.org/system/files/conference/atc15/atc15-paper-karanasos.pdf
+%https://www.usenix.org/system/files/conference/atc15/atc15-paper-delgado.pdf]
+There is also a physical limit to how much a cluster can be scaled without
+significantly reducing orchestration performance. [CITE
+https://kubernetes.io/docs/setup/best-practices/cluster-large/].
+
+% Introducing multi cluster environments
+For the reasons mentioned above, as well as the need for workload and
+geographical isolation, organizations are expanding their infrastructure into
+multuiple clusters. [CITE
+https://cloud.google.com/kubernetes-engine/fleet-management/docs/multi-cluster-use-cases]
+\cite{google-cloud-blog} Organizations are now equipped with different clusters
+for different workloads and teams \cite{patel_what_2022, li_lyra_2023}. For
+example, 50\% of Kubernetes \cite{borg} end users have 10+ clusters
+\cite{noauthor_cncf_2023} , with companies like Mercedes nearing 1000 clusters
+\cite{noauthor_mercedes-benz_2023}. Airbnb segmented its clusters into more
+than 30 types, and orchestrate more than a 100 cluster in their infrastructure
+[CITE
+https://medium.com/airbnb-engineering/dynamic-kubernetes-cluster-scaling-at-airbnb-d79ae3afa132] 
+
+Although multi-cluster environments offer lots of advantages, partitioning
+resources still comes with a cost and an increased overhead.\cite{adv-dis-mutli}.\\
+
 % introducing capacity loaning
-Researchers at ByteDance observed that their inference cluster utilization is usually around 40\% because 
-of diurnal traffic patterns, and that their training cluster is always over subscribed. 
-To retain the benefits of cluster separation, and reduce its cost, they introduced \textit{capacity loaning}, 
-a mechanism that allows a cluster to lend resources to another cluster without losing ownership and built a system on top 
-of it called Lyra.
-Their policy allows the training cluster to borrow resources from the inference one, while permitting the 
-latter to reclaim resources dynamically. 
-Compared to a baseline FIFO scheduler, capacity loaning recorded a 1.39x reduction in average queueing time and a 1.31x 
-reduction in job completion time (JCT), proving the effectiveness of the method in a constrained environment. \cite{li_lyra_2023}.
-% Even with the paper constraints (single policy, unidirectional loaning, and a pair of clusters), capacity loaning has 
-% proved to be effective. 
+Researchers at ByteDance observed that their inference cluster utilization is
+usually around 40\% because of diurnal traffic patterns, and that their
+training cluster is always over subscribed. To retain the benefits of cluster
+separation, and reduce its cost, they introduced \textit{capacity loaning}, a
+mechanism that allows a cluster to lend resources to another cluster without
+losing ownership and built a system on top of it called Lyra. Their policy
+allows the training cluster to borrow resources from the inference one, while
+permitting the latter to reclaim resources dynamically. Compared to a baseline
+FIFO scheduler, capacity loaning recorded a 1.39x reduction in average queueing
+time and a 1.31x reduction in job completion time (JCT), proving the
+effectiveness of the method in a constrained environment. \cite{li_lyra_2023}.
+% Even with the paper constraints (single policy, unidirectional loaning, and a
+% pair of clusters), capacity loaning has proved to be effective. 
 
 % introducing delay scheduling 
-Delay scheduling is an algorithm designed to address the conflict between fairness and data locality in 
-shared clusters. 
-If a job is set to be scheduled according to the fairness policy but the node its data is on is full, 
-the scheduler delays scheduling it in an attempt to schedule it on that node when it frees up. The algorithm 
-has several passes trying to schedule the job as close as it can, increasing how far the job is from its data every pass 
-to guarantee its eventual scheduling \cite{zaharia_delay_2010}.
+Delay scheduling is an algorithm designed to address the conflict between
+fairness and data locality in shared clusters. If a job is set to be scheduled
+according to the fairness policy but the node its data is on is full, the
+scheduler delays scheduling it in an attempt to schedule it on that node when
+it frees up. The algorithm has several passes trying to schedule the job as
+close as it can, increasing how far the job is from its data every pass to
+guarantee its eventual scheduling \cite{zaharia_delay_2010}.
 
+% Introduce the notion of the liquid computing
+Liquid computing have been introduced as an architectural paradigm that extends
+resource usage into multiple users, treating the underlying infrastructure as a
+continuum of computatioinal resources. 
+%[CITE G. Gruman, “Welcome to the next tech revolution: Liquid computing,”
+%https://www.infoworld.com/article/2608440/article.html, Jul. 2014, (Re-
+%trieved: Mar. 2022), LIQO]
 
-%Our plan is to build upon this concept, and expand capacity loaning to a more robust and general 
-%mechanism. 
-
-Our plan stems from delay scheduling and capacity loaning, creating a system for schedulers 
-to trade resources.
-%\hl{possible names?: capacity trading /resource trading / resource fluidity},  we can relate to sky computing too % GO BEYOND THEIR WORK / EVEN MORE THAN GENERALIZATION % We plan to generalize loaning to be non-workload specific. Cluster schedulers will be able to communicate % with each other when needed, borrowing/lending, buying/selling, or negotiating resources. % or (to trade resources)
+This thesis presents a new trading mechanism which allows clusters to trade
+resources with each other through user-defined policies, dictating which
+performance metrics they plan to optimize and how aggresive their strategy is.
+We do that by treating multi-cluster environments as a continuum of resources
+without forfeiting their ownership. The mechanism extends capacity loaning to
+serve multiple clusters and be workload-agnostic while presenting a possible
+incentive for loaning clusters. We also utilize delay scheduling to serve as
+the scheduling algorithm for localityconcerns, however any scheduling technique
+would suffice.
+%\hl{possible names?: capacity trading /resource trading / resource fluidity},
+%we can relate to sky computing too % GO BEYOND THEIR WORK / EVEN MORE THAN
+%GENERALIZATION % We plan to generalize loaning to be non-workload specific.
+%Cluster schedulers will be able to communicate % with each other when needed,
+%borrowing/lending, buying/selling, or negotiating resources. % or (to trade
+%presources)
