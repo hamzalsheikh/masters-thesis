@@ -139,7 +139,12 @@
 %%% after ALL OTHER packages, in case it needs to override some of their
 %%% definitions.
 \usepackage{url}
-
+\usepackage{graphicx} % Required for inserting images
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{cite}
 \usepackage {mythesis}
 \paperwidth=8.5in
 \paperheight=11in
@@ -233,17 +238,19 @@
 \pagestyle{headings} % NEW for sample-thesis-6
 
 \include {introduction}
-\include {background}
+\include {related-work}
 \include {design}
 \include {implementation}
 \include {evaluation}
+\include {conclusion}
+\include {future-work}
 % \numberofappendices = 1   % Set 0 for none, else number of appendices.
-\numberofappendices = 3
-\appendix       % Chapters, sections are now appendix style A, A.1, A.2, B, C, D, ...
-
-\include {appa}
-\include {appb}
-\include {appc}
+%\numberofappendices = 3
+%\appendix       % Chapters, sections are now appendix style A, A.1, A.2, B, C, D, ...
+%
+%\include {appa}
+%\include {appb}
+%\include {appc}
 
 %%% The choice of bibliography style is a major decision, jointly made
 %%% by you, your thesis advisor and the thesis editor. Common choices are
@@ -286,6 +293,6 @@
 %%% LaTeX reads BibTeX's formatted reference list from the file
 %%% \jobname.bbl.
 
-\bibliography{\jobname,proposal}
+\bibliography{proposal}
 
 \end {document}
