@@ -1,60 +1,91 @@
 %%% -*-LaTeX-*-
 
-\chapter{Implementation}
+\chapter{Implementation} 
 
-\section{Thesis Plan}
-% the goal is to test different policies and see which ones, coupled with the appropriate workload, 
-% achieves one of the goals stated in the thesis statement.
+In the previous section, we outlined the theoretical design of the system. This
+section goes over the implementation of the simulator written to evaluate the
+mechanism.
 
-To demonstrate the validity of the proposed mechanism, we plan to test different trading policies 
-coupled with different workloads on a multi-cluster scheduling simulator \cite{sched-github}.
+%Why simulator 
+We decided that having a simulator will allow us a broader scope for testing
+the trading mechanism. Although it is possible to build the mechanism on top of
+current multi-cluster networking solutions, we will be limited to the design
+decisions of the tools used. Having a broader simulated results will open the
+door for more interesting questions and answers leading to a concrete system
+being built on an actual cluster.
 
-\subsection{Simulator}
-It simulates a multi-cluster environment, where each cluster can be run locally or on different nodes. 
-Clusters communicate through http, and jobs are simulated as chunks of time and resources scheduled on the clusters, 
-easing the implementation of trading resources. 
-
-\subsubsection{Components}
+The simulator is implemented as a set of seperate Go packages that can be run
+in a distributed fashion.
 \begin{enumerate}
-    \item Registry: The registry tracks the availability of the clusters in the environment, facilitating service discovery. 
-    \item Scheduler: The main component of the simulator, it runs jobs with specific size and time, and enacts the policies 
-    attached to it.
-    \item Client: Sends jobs to the schedulers.
-\end{enumerate}
-\subsubsection{Current State}
-The simulator is functional, jobs are locally scheduled in FIFO, and the first policy implemented 
-is attempting to improve resource utilization and decrease job queueing time, similar to the example 
-in the methodology \ref{example}. Workloads are created synthetically using probability distributions. 
-Moreover, OpenTelemetry \cite{opentelemetry} and Jaeger \cite{jaeger} are used to record metrics 
-and traces, but still don't cover the scope of the whole project.
-\\Next steps in development include:
-\begin{enumerate}
-    \item Develop policies' pluggable interface
-    \item Production workload porting
-    \item Complete telemetry and logging
-\end{enumerate}
-\subsection{Evaluation}
-\subsubsection{Workloads}
-We have two sources of workloads passed to the Client:
-\begin{enumerate}
-    \item Synthetic: workloads created from probability distributions
-    \item Publicly available production workloads: 
-        \begin{enumerate}
-            \item Google Trace \cite{wilkes_yet_2020} \cite{borg}: It includes traces to 8 different clusters. 
-            \item Alibaba Trace \cite{alibaba-latest} \cite{alibabaclusterdata_2023}: Includes traces of different clusters with distinct workloads.        
-        \end{enumerate}
+  \item Trader: main module responsible for the functionality of the mechanism
+  \item Scheduler: responsible for scheduling jobs on the cluster,
+    communicating cluster state with the trader, providing/receiving virtual
+    nodes 
+  \item Client: Imports production traces or creates synthetic workloads and
+    sends it to the schedueler.
 \end{enumerate}
 
-\subsubsection{Policies}
-We provided example policies in the methodology section and plan to expand on them, finding policies that  
-fit specific workloads to optimize the performance metrics, and will be evaluated accordingly. 
+The simulator also includes other bookkeeping components like a service package
+and a registry that don't interfere much with the evaluation and won't be
+further discussed.
 
-\subsubsection{Measurments}
-We plan to measure the optimized-for metric per policy-workload couple. 
-Metrics are both overall and per-cluster and include:
+The client communicates with the scheduler through http, whereas as the
+scheduler-trader and trader-trader communication is through grpc. 
+
+\section{Scheduler} 
+
+This section only discusses design decisioins and additions made relating to
+the mechanism. These components are on top of regular scheduling functionality. 
+
+The main aspect to be discussed in the scheduler is the scheduling algorithm
+itself. It is a two level delay scheduling algorithm. A job is first added to
+level 0 queue, and sent to level 1 queue if not scheduled in X time. Level 1
+jobs are more likely to be scheduled away from their data, hence these are the
+ones that will be sent to the trader when estimating the size of the node to
+send. A distinctive difference to the delay scheduling algorithm is that the
+nodes do not request jobs to be scheduled on them, but instead the scheduling
+algorithm looks for nodes to schedule the jobs, similar to widely used cluster
+schedulers.
+
+A node burst scheduling is also implemented in the scheduler. Once a virtual
+node is added to the cluster, the cluster tries to schedule as much viable jobs
+it can on it right away to increase utilization of the virtual node, since the
+node have a deadline. 
+
+The scheduler also implements a gRPC server responsible for sending the
+required cluster state to the trader.
+
+\section{Trader}
+
+The trader receives the cluster state from the scheduler through a continious
+loop as a gRPC client. The trader then runs a state monitor, cycling through
+the outgoing policies to check whether any is broken.   
+
+\subsection{Trading algorithm}
+
+When cluster state breaks a policy, trading is initaited. The trader retrieves
+a list of active traders from the regisrty, estimates the amount of resources
+needed while abiding to constraints, and sends a contract request to all
+participating traders. It then chooses the most favorable trader, approves the
+contract, and adds the received virtual node to the local cluster. 
+
+\subsection{Policies}
+
+\lstinputlisting[language=go, firstline=94,
+lastline=96]{../multi-cluster-simulator/pkg/trader/trader.go}
+
+The outgoing policies are implemented as an interface with a Broken method
+signature. This allows the policies to be pluggablle. The user can define the
+policy as long as there's a notion that the policy can break depending on the
+cluster changes.
+
+We currently implement two Policies:
 \begin{enumerate}
-    \item Average JCT \ref{jct}
-    \item Resource utilization \ref{example} 
-    \item Cost \ref{cost} 
-    \item Scheduling overhead \ref{sched-overhead}
+  \item Wait time: The policy is broken if the average wait time in the cluster
+    is above a threshold.
+  \item Utilization: The policy is broekn if resource utilization exceeds a
+    limit. 
 \end{enumerate}
+
+Incoming policies do not have the pluggibility trait. Users dial the knobs for
+accepting incoming contracts with respect to the cluster state.
