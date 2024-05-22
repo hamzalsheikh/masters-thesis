@@ -17,9 +17,8 @@ completion time, and/or reduce average cost by providing clusters with a
 resource trading mechanism allowing the virtual sharing of resources across
 clusters. 
 
-\section{Design}
 
-\subsection{Role of Scheduler in the mechanism}
+\section{Role of Scheduler in the mechanism}
 
 Cluster scheduling have been widely studied, and continues to be a hot topic
 with more innovations coming in. We don't aim to replace the well established
@@ -64,7 +63,7 @@ scope of this thesis.
 %This presents us with a clean heuristic when calculalting resources needed for
 %trading. As the level of the of what to include in our 
 
-\subsection{Policies}
+\section{Policies}
 
 % Policy intro
 Policies are created to optimize a specific performance metric, acting as knobs
@@ -74,7 +73,7 @@ pluggable and mutable, meaning each cluster can implement its own request and
 receive policy, and dynamically update it as requirements or conditions change.
 Policies are two types, incoming and outgoing. 
 
-\subsubsection{Incoming} 
+\subsection{Incoming} 
 
 Incoming policies set the rules for accepting resource requests from foreign
 clusters. The mechanism consults the policy, comparing the current cluster
@@ -83,7 +82,7 @@ state with the requested resources and concludes its decision.
 % add figure for policy? or give an example??
 [ADD FIGURE]
 
-\subsubsection{Outgoing}
+\subsection{Outgoing}
 
 As the system continously monitors the cluster state, it makes sure the state
 does not break any of the outgoing policies' requirements. Once that happens
@@ -91,7 +90,7 @@ the mechanism initiates the trading procedure.
 
 [ADD FIGURE]
 
-\subsection{Trader}
+\section{Trader}
 
 The trader is the main component of the mechanism. As an orchestrator, K8s role
 is to sync the actual cluster state with the declared desired state. This
@@ -156,8 +155,6 @@ current cluster state, and decides whether to approve the contract. If the
 trader gets picked by the foreign cluster, the trader then requests the needed
 resources from the scheduler and sends the node information back to the foreign
 trader.
-\newpage
-
 
 %Our mechanism offers bidirectional trading, allowing clusters to trade
 %resources with one another. It also enables trading with multiple clusters, so
