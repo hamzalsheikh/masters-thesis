@@ -17,6 +17,11 @@ completion time, and/or reduce average cost by providing clusters with a
 resource trading mechanism allowing the virtual sharing of resources across
 clusters. 
 
+\begin{figure}[H]
+    \centerline{\includegraphics[scale=0.4]{figures/system-diagram}}
+    \caption{System design showing the various compononents of the trader, and a snapshot of the cluster. }
+    \figlabel{fig2}
+\end{figure}
 
 \section{Role of Scheduler in the mechanism}
 
@@ -155,6 +160,8 @@ current cluster state, and decides whether to approve the contract. If the
 trader gets picked by the foreign cluster, the trader then requests the needed
 resources from the scheduler and sends the node information back to the foreign
 trader.
+\newpage
+
 
 %Our mechanism offers bidirectional trading, allowing clusters to trade
 %resources with one another. It also enables trading with multiple clusters, so
