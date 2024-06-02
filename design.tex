@@ -113,28 +113,38 @@ section \ref{trader}.
 Policies are created to optimize a specific performance metric, acting as knobs
 to tune the mechanism and update it as cluster requirements change. They are a
 set of rules that dictate how each cluster handles trading. Policies are
-pluggable and mutable, meaning each cluster can implement its own request and
-receive policy, and dynamically update it as requirements or conditions change.
-Policies are two types, incoming and outgoing. 
+pluggable and mutable, meaning each cluster can implement its own incoming and
+outoging policies, and dynamically update it as requirements or conditions
+change. The metrics in scope are the ones sent by the scheduler, and include
+wait time, job completion time, utilization, cost, etc. Policies are
+categorized into two groups, incoming and outgoing. Incoming policies dictate
+how the trader responds to external clusters' requests, whereas outgoing
+policies establish the conditions under which the the cluster begins requesting
+resources from external clusters.
 
-\subsection{Incoming} 
+We design both incoming and outgoing policies as interfaces, enabling them to
+be pluggable and user-defined. Incoming policies implement an
+\texttt{approveRequest()} method, which returns true when an external cluster's
+request is feasible. the outgoing policies requires a \texttt{Broken()} method
+signature, triggering the trader to request resources when the cluster state
+breaks the policy conditions.  
 
-Incoming policies set the rules for accepting resource requests from foreign
-clusters. The mechanism consults the policy, comparing the current cluster
-state with the requested resources and concludes its decision.
+A cluster admin aiming to reduce wait time would create an outgoing policy that
+breaks when average wait time exceeds the specified threshold, and an incoming
+policy that refuses to provide resources under the similar conditions.
+Optimizing for utilization, an admin would create an outgoing policy that
+breaks when utilization surpasses a resource utilization threshold and an
+incoming policy that denies resources for the same criterion. Tuning the
+policies as requirements change can be achieved by increasing or decreasing the
+respective thresholds. Stopping all incoming or outgoing policies another way
+to adjust the mechanism. An admin might disable incoming policies altogether
+during a peak times to enhance system predictability.  
 
-% add figure for policy? or give an example??
-[ADD FIGURE]
+\figref{fig1} shows a set of policies as an input to the trader. These, along
+with the cluster state will inform the trading decisions as we will see in the
+next section.
 
-\subsection{Outgoing}
-
-As the system continously monitors the cluster state, it makes sure the state
-does not break any of the outgoing policies' requirements. Once that happens
-the mechanism initiates the trading procedure. 
-
-[ADD FIGURE]
-
-\section{Trader}
+\section{Trader} \label{trader}
 
 The trader is the main component of the mechanism. As an orchestrator, K8s role
 is to sync the actual cluster state with the declared desired state. This
