@@ -24,21 +24,6 @@ In this chapter we present the system design, discuss the role of the scheduler
 in the mechanism, explain what user-defined policies are and lastly describe
 the design of the trader itself. 
 
-The next figure portrays an overview of the system:
-
-\begin{figure}[H]
-  \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
-  \caption{System architecture showing the various compononents of the trader,
-    and how it connects to a cluster. Red section represents the procedure
-    requesting resources and the yellow section depicts the procedure of
-    providing resources to external clusters. squares represents the node in
-    the host cluster. Dark gray nodes represent localy utilized nodes and light
-    gray nodes represent free local nodes. Green and blue nodes represent
-    resources    provided to external clusters and the dotted square is a
-    virtual node received from an external cluster} 
-  \figlabel{fig1}
-  \end{figure}
-
 
 \section{Scheduler}
 % introducing the notion of minimal intursivity
@@ -138,42 +123,55 @@ incoming policy that denies resources for the same criterion. Tuning the
 policies as requirements change can be achieved by increasing or decreasing the
 respective thresholds. Stopping all incoming or outgoing policies another way
 to adjust the mechanism. An admin might disable incoming policies altogether
-during a peak times to enhance system predictability.  
-
-\figref{fig1} shows a set of policies as an input to the trader. These, along
-with the cluster state will inform the trading decisions as we will see in the
-next section.
+during a peak times to enhance system predictability. 
 
 \section{Trader} \label{trader}
 
-The trader is the main component of the mechanism. As an orchestrator, K8s role
-is to sync the actual cluster state with the declared desired state. This
-involves spawning a new container if an old one died or scaling a service if it
-gets more traffic. The trader plays a similar role, it is responsible for
-keeping the cluster's state in sync with the declared desired state. The
-desired state is declared through the user defined outgoing policies. Once the
-current state of the cluster breaks an outgoing policy, it initiates the
-trading request algorithm. 
+\begin{figure}[H]
+  \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
+  \caption{System architecture showing the various compononents of the trader,
+    and how it connects to a cluster. Red section represents the procedure
+    requesting resources and the yellow section depicts the procedure of
+    providing resources to external clusters. squares represents the node in
+    the host cluster. Dark gray nodes represent localy utilized nodes and light
+    gray nodes represent free local nodes. Green and blue nodes represent
+    resources    provided to external clusters and the dotted square is a
+    virtual node received from an external cluster} 
+  \figlabel{fig1}
+\end{figure}
+
+Now that the scheduler and the policies have been introduced, we present the
+complete system architecture in \figref{fig1} and further explain the trader.
+
+Perceived as the user's desired cluster state, the trader receives the policies
+as input as shown on top of the figure. The trader then requests a cluster
+state stream from the scheduler, receiving updated metrics information. The
+trader monitor continously cycles through the outgoing policies and initiates the trading algorithm when one is broken.
+
+This triggers the outgoing procedure highlighted in red in the figure above and
+detailed in the algorithm below:
+
 % add trading request algorithm
 % Example Algorithm
+\begin{figure}[H]
 \begin{algorithm}[H]
-\caption{Trading Scheduling Algorithm - Requester}
+\caption{Outgoing Trading Algorithm}
 \begin{algorithmic}
-    \For{job in WaitQueue}
-        \State $scheduled \gets ScheduleJob(job)$
-        \If{$scheduled \neq True$ \&\& Policy(job) $==$ True} 
-        \State $requestResources(job)$
-        \EndIf
+  \Procedure{Trade}{$P_b$} \Comment{$p_b$ = broken policy}
+    \State $P_{type} \gets Type(P_b)$
+    \State $level_N Jobs \gets GetJobs(n)$ \Comment{get from scheduler}
+    \State $virtualNodeSize \gets calculateNodeSize(P_{type}, level_N Jobs)$
+    \For{traders in multi-cluster environment}
+      \State $contract \gets SendTradeRequest(virtualNodeSize)$
     \EndFor
-
-    \For{job in ReadyQueue}
-        \State $scheduled \gets ScheduleJob(job)$
-        \If{$scheduled \neq True$}
-        \State $WaitQueue \gets WaitQueue + job$
-        \EndIf
-    \EndFor
+    \State $contracts \gets ReceiveTradeResponses$ \Comment{list of approved contracts}
+    \State \textbf{return} $contract_{best}$\Comment{best virtual node is sent to scheduler}
+    
+  \EndProcedure
 \end{algorithmic}
 \end{algorithm}
+\caption{Outgoing Trading Algorithm}
+\end{figure}
 
 The first step in the trading algorithm is determining the amount of resources
 needed. First, the trader requests more information from the scheduler. The
@@ -191,17 +189,23 @@ contracts, the trader approves the best contract, and receives the virtual node
 information from the foreign trader. It then sends the virtual node for the
 scheduler to start scheduling jobs on it.
 
+\begin{figure}[H]
 \begin{algorithm}[H]
-    \caption{Trading Scheduling Algorithm - Receiver}
-    \begin{algorithmic}
-            \State $ resources \gets BorrowRequest $ \Comment{Incoming from another cluster} 
-            \If{$Policy(resources) = True$} 
-            \State $sendAcceptRequest(job, cluster)$
-            \State $prepareResources(resources)$
-            \State $allowAccess$
-            \EndIf
-    \end{algorithmic}
-\end{algorithm} 
+\caption{Incoming Trading Algorithm}
+\begin{algorithmic}
+  \Procedure{Trade}{$T_{request}$} \Comment{$T_{request}$ = trade request}
+    \For{$P_{incoming}$ in Incoming policies}
+      \If{$P_{incoming}(ccs, T_{request}) \not= true$} \Comment{ccs = current cluster state}
+      \State \textbf{return} $false$ \Comment{Could not approve trade}
+      \EndIf
+    \EndFor
+    \State $virtualNode \gets getVirtualNode(T_{request})$ \Comment{from scheduler}    
+    \State \textbf{return} $virtualNode$ \Comment{Trade Approved}
+  \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\caption{Incoming Trading Algorithm}
+\end{figure}
 
 The trader is also responsible for accepting/rejecting incoming requests. After
 receiving a contract request, the trader consults the incoming policy and the
