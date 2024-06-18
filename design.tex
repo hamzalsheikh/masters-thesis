@@ -24,6 +24,18 @@ In this chapter we present the system design, discuss the role of the scheduler
 in the mechanism, explain what user-defined policies are and lastly describe
 the design of the trader itself. 
 
+\begin{figure}[H]
+  \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
+  \caption{System architecture showing the various compononents of the trader,
+    and how it connects to a cluster. Red section represents the procedure
+    requesting resources and the yellow section depicts the procedure of
+    providing resources to external clusters. squares represents the node in
+    the host cluster. Dark gray nodes represent localy utilized nodes and light
+    gray nodes represent free local nodes. Green and blue nodes represent
+    resources    provided to external clusters and the dotted square is a
+    virtual node received from an external cluster} 
+  \figlabel{fig1}
+\end{figure}
 
 \section{Scheduler}
 % introducing the notion of minimal intursivity
@@ -92,61 +104,54 @@ section \ref{trader}.
 %This presents us with a clean heuristic when calculalting resources needed for
 %trading. As the level of the of what to include in our 
 
-\section{Policies}
-
+\section{Policies \& Rules}
+% intro to this section
+% should i seperate them each at a section?
 % Policy intro
-Policies are created to optimize a specific performance metric, acting as knobs
-to tune the mechanism and update it as cluster requirements change. They are a
-set of rules that dictate how each cluster handles trading. Policies are
-pluggable and mutable, meaning each cluster can implement its own incoming and
-outoging policies, and dynamically update it as requirements or conditions
-change. The metrics in scope are the ones sent by the scheduler, and include
-wait time, job completion time, utilization, cost, etc. Policies are
-categorized into two groups, incoming and outgoing. Incoming policies dictate
-how the trader responds to external clusters' requests, whereas outgoing
-policies establish the conditions under which the the cluster begins requesting
-resources from external clusters.
+Rules are created to optimize a specific performance metric, acting as knobs
+to tune the mechanism and update it as cluster requirements change. They 
+dictate how and when a trader initiates resource requests to other traders.
 
-We design both incoming and outgoing policies as interfaces, enabling them to
-be pluggable and user-defined. Incoming policies implement an
-\texttt{approveRequest()} method, which returns true when an external cluster's
-request is feasible. the outgoing policies requires a \texttt{Broken()} method
+%the conditions under which the the cluster begins requesting resources from
+%external clusters.
+
+Policies are asymmetrical to rules, in that they dictate how the trader
+responds to received resource requests.
+
+Both rules and policies are pluggable and mutable, meaning each admin can
+implement their own, and dynamically update them as cluster requirements or
+conditions change, depending on the metrics provided. 
+
+The metrics in scope are the ones sent by the scheduler, and include wait time,
+job completion time, utilization, cost, etc. 
+
+We design both rules and policies as interfaces, enabling them to
+be pluggable and user-defined. Policies implement an
+\texttt{approveRequest()} method, which returns true when an external trader's
+request is feasible, where as rules implement a \texttt{Broken()} method
 signature, triggering the trader to request resources when the cluster state
-breaks the policy conditions.  
+breaks the conditions.  
 
-A cluster admin aiming to reduce wait time would create an outgoing policy that
-breaks when average wait time exceeds the specified threshold, and an incoming
-policy that refuses to provide resources under the similar conditions.
-Optimizing for utilization, an admin would create an outgoing policy that
-breaks when utilization surpasses a resource utilization threshold and an
-incoming policy that denies resources for the same criterion. Tuning the
-policies as requirements change can be achieved by increasing or decreasing the
-respective thresholds. Stopping all incoming or outgoing policies another way
-to adjust the mechanism. An admin might disable incoming policies altogether
-during a peak times to enhance system predictability. 
+A cluster admin aiming to reduce wait time would create a rule that breaks when
+average wait time exceeds the specified threshold, and a policy that refuses to
+provide resources under similar conditions. Optimizing for utilization, an
+admin would create a rule that breaks when utilization surpasses a resource
+utilization threshold and a policy that denies resources for the same
+criterion. Tuning the policies as requirements change can be achieved by
+increasing or decreasing the respective thresholds. Stopping all trading rules
+and policies is another way to adjust the mechanism. An admin might disable
+policies altogether during peak times to enhance system predictability. 
 
 \section{Trader} \label{trader}
 
-\begin{figure}[H]
-  \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
-  \caption{System architecture showing the various compononents of the trader,
-    and how it connects to a cluster. Red section represents the procedure
-    requesting resources and the yellow section depicts the procedure of
-    providing resources to external clusters. squares represents the node in
-    the host cluster. Dark gray nodes represent localy utilized nodes and light
-    gray nodes represent free local nodes. Green and blue nodes represent
-    resources    provided to external clusters and the dotted square is a
-    virtual node received from an external cluster} 
-  \figlabel{fig1}
-\end{figure}
-
-Now that the scheduler and the policies have been introduced, we present the
-complete system architecture in \figref{fig1} and further explain the trader.
+With the scheduler and policies in place, in section we present the trader
+as the main component of the system.
 
 Perceived as the user's desired cluster state, the trader receives the policies
-as input as shown on top of the figure. The trader then requests a cluster
+as input as shown at top of the figure. The trader then requests a cluster
 state stream from the scheduler, receiving updated metrics information. The
-trader monitor continously cycles through the outgoing policies and initiates the trading algorithm when one is broken.
+trader monitor continously cycles through the outgoing policies and initiates
+the trading algorithm when one is broken.
 
 This triggers the outgoing procedure highlighted in red in the figure above and
 detailed in the algorithm below:
