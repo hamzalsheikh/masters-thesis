@@ -87,8 +87,7 @@ performance when scheduled in a foreign cluster.
 \figref{fig1} includes the architecture of the scheduler described here. The
 different queues represent different levels a job can be in. The incoming and
 outgoing arrows represents the exposed interface the trader utilize to
-communicate with the scheduler and will be further explained in the trader
-section \ref{trader}. 
+communicate with the scheduler and will be further explained next.
 
 %Of course, more analysis could go in deciding what jobs would better fit being
 %exported to other clusters like jobs demanding less communiication with other
@@ -104,95 +103,97 @@ section \ref{trader}.
 %This presents us with a clean heuristic when calculalting resources needed for
 %trading. As the level of the of what to include in our 
 
-\section{Policies \& Rules}
-% intro to this section
-% should i seperate them each at a section?
-% Policy intro
-Rules are created to optimize a specific performance metric, acting as knobs
-to tune the mechanism and update it as cluster requirements change. They 
-dictate how and when a trader initiates resource requests to other traders.
-
-%the conditions under which the the cluster begins requesting resources from
-%external clusters.
-
-Policies are asymmetrical to rules, in that they dictate how the trader
-responds to received resource requests.
-
-Both rules and policies are pluggable and mutable, meaning each admin can
-implement their own, and dynamically update them as cluster requirements or
-conditions change, depending on the metrics provided. 
-
-The metrics in scope are the ones sent by the scheduler, and include wait time,
-job completion time, utilization, cost, etc. 
-
-We design both rules and policies as interfaces, enabling them to
-be pluggable and user-defined. Policies implement an
-\texttt{approveRequest()} method, which returns true when an external trader's
-request is feasible, where as rules implement a \texttt{Broken()} method
-signature, triggering the trader to request resources when the cluster state
-breaks the conditions.  
-
-A cluster admin aiming to reduce wait time would create a rule that breaks when
-average wait time exceeds the specified threshold, and a policy that refuses to
-provide resources under similar conditions. Optimizing for utilization, an
-admin would create a rule that breaks when utilization surpasses a resource
-utilization threshold and a policy that denies resources for the same
-criterion. Tuning the policies as requirements change can be achieved by
-increasing or decreasing the respective thresholds. Stopping all trading rules
-and policies is another way to adjust the mechanism. An admin might disable
-policies altogether during peak times to enhance system predictability. 
 
 \section{Trader} \label{trader}
 
-With the scheduler and policies in place, in section we present the trader
-as the main component of the system.
+The trader is the central component of the mechanism. It facilitates the
+exchange of resources between clusters and encapsulates all trading logic. 
 
-Perceived as the user's desired cluster state, the trader receives the policies
-as input as shown at top of the figure. The trader then requests a cluster
-state stream from the scheduler, receiving updated metrics information. The
-trader monitor continously cycles through the outgoing policies and initiates
-the trading algorithm when one is broken.
+This exchange is bidirectional, meaning a cluster can receive external
+resources and give away its own resources to other clusters. Clusters only
+communicate with each other through their traders, which gets configured by the
+cluster adminstrator. 
 
-This triggers the outgoing procedure highlighted in red in the figure above and
-detailed in the algorithm below:
+The trader is responsible for keeping the cluster's state in conformity with a
+desired state. As shown in the figure, the trader establishes a cluster state
+stream with the scheduler, continously sending up-to-date cluster information.
+It includes the overall utilization, average job completion time, and current
+cost of resources. This stream allows the trader to monitor the cluster state
+and make trading decisions based on the current state of the cluster.
 
-% add trading request algorithm
+We will first examine what happens when the cluster needs resources, marked in
+red in figref{fig1} and detailed in the following algorithm.
+
 % Example Algorithm
 \begin{figure}[H]
 \begin{algorithm}[H]
 \caption{Outgoing Trading Algorithm}
 \begin{algorithmic}
-  \Procedure{Trade}{$P_b$} \Comment{$p_b$ = broken policy}
-    \State $P_{type} \gets Type(P_b)$
+  \Procedure{Trade}{$R_b$} \Comment{$R_b$ = broken rule}
+    \State $R_{action} \gets Action(R_b)$
     \State $level_N Jobs \gets GetJobs(n)$ \Comment{get from scheduler}
-    \State $virtualNodeSize \gets calculateNodeSize(P_{type}, level_N Jobs)$
+    \State $virtualNodeSize \gets calculateNodeSize(R_{action}, level_N Jobs)$
     \For{traders in multi-cluster environment}
       \State $contract \gets SendTradeRequest(virtualNodeSize)$
     \EndFor
     \State $contracts \gets ReceiveTradeResponses$ \Comment{list of approved contracts}
     \State \textbf{return} $contract_{best}$\Comment{best virtual node is sent to scheduler}
-    
   \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 \caption{Outgoing Trading Algorithm}
 \end{figure}
 
-The first step in the trading algorithm is determining the amount of resources
-needed. First, the trader requests more information from the scheduler. The
-scheduler is required to share a job's list with the trader. The trader in turn
-uses the information provided to calculate the requested node size. The user
-defined outgoing policy also dictates any additional constraints the trader is
-required to adhere to. If the notion of a currency is established in the
-multi-cluster environmnet, constraints would include a budget, as well as a
-maximum price to pay for resources, which can be the price of renting out the
-resources from the vendor, or a cost estimate anaylsis algorithm. 
+The desired state is declared through a set of rules, which are
+configurations dynamically passed to the trader shown below:  
 
-After calculating the needed resources, the trader then broadcasts a contract
-to all participating clusters, and waits for replies. After receiving approved
+\begin{figure}[H]
+  \begin{lstlisting}[language=go]
+    type Rule struct {
+      Condition: // desired state to maintain
+      Action: // algorithm to use
+      Broken(cluster state, condition) bool
+    } 
+  \end{lstlisting}
+  \caption{Rules}
+\end{figure}
+
+The rule's condition represents the desired value of a measurement sent by the
+scheduler to the trader like utilization below 80\%. The rule implements a
+Broken method which allows the trader to run an action when the actual cluster
+state differs from the desired state. As the trader continously monitors the
+cluster state, it runs the broken methods of all rules to check whether any is
+broken. When a rule is broken, the trader's first step is to calculate the
+resources it needs to request from other traders. To do that, it first requests
+the last level jobs from the scheduler, resembling the jobs that would already
+be scheduled further away from their data. The trader consults the broken rule
+again, where the action variable specifies how to estimate the needed
+resources. 
+
+There are currently two ways to estimate the resource request: 
+\begin{enumerate}
+
+  \item \textbf{Optimized:} A greedy approach that stacks jobs efficiently over
+    time on the requested node.
+
+  \item \textbf{Take All:} Calculates resources as if all is scheduled at time
+    0 on the requested node.
+
+\end{enumerate}
+
+The first approach allows the trader to reduce the size of the request which in
+turn increases the chances of it getting approved, whereas the other approach
+eagerly tries to increase the benefit from a trade.
+
+After estimaing the needed resources, the trader then broadcasts a contract to
+all participating clusters, and waits for replies. After receiving approved
 contracts, the trader approves the best contract, and receives the virtual node
 information from the foreign trader. It then sends the virtual node for the
 scheduler to start scheduling jobs on it.
+
+The trader is also responsible for accepting/rejecting incoming requests.
+Outlined in the blue section of figure one and detailed in the following
+algorithm: 
 
 \begin{figure}[H]
 \begin{algorithm}[H]
@@ -212,12 +213,74 @@ scheduler to start scheduling jobs on it.
 \caption{Incoming Trading Algorithm}
 \end{figure}
 
-The trader is also responsible for accepting/rejecting incoming requests. After
-receiving a contract request, the trader consults the incoming policy and the
+After receiving a contract request, the trader consults the incoming policy and the
 current cluster state, and decides whether to approve the contract. If the
 trader gets picked by the foreign cluster, the trader then requests the needed
 resources from the scheduler and sends the node information back to the foreign
 trader.
+
+% add trading request algorithm
+
+%The user defined outgoing policy also dictates any additional constraints the
+%trader is required to adhere to. If the notion of a currency is established in
+%the multi-cluster environmnet, constraints would include a budget, as well as a
+%maximum price to pay for resources, which can be the price of renting out the
+%resources from the vendor, or a cost estimate anaylsis algorithm. 
+
+% rules intro
+%A desired state is the state the orchestrator works on acheiving and keeping. A
+%cluster adminstrator passes the desired state to the orchestrator, which in
+%turn continously checks the actual state and compares it to the desired state
+%while trying to restore the actual state to the desired one when it deviates.
+%For example, if the desired state of a job on the cluster is having 3 replicas,
+%and one server crashes, deleting one of the job's replicas, the orchestrator
+%finds another healthy server to run the job's third replica on.  
+
+
+%the conditions under which the the cluster begins requesting resources from
+%external clusters.
+% policies intro
+\begin{figure}[H]
+  \begin{lstlisting}[language=go]
+    type Policy struct {
+      Name  string
+      Conditions // cluster state that allows approval
+      Incentive // offer from external cluster
+      ApproveRequest(request) bool 
+    } 
+  \end{lstlisting}
+  \caption{Custom Policy implements an approveRequest method}
+\end{figure}
+Policies are asymmetrical to rules, in that they dictate how the trader
+responds to received resource requests.
+
+%Both rules and policies act as knobs to tune the mechanism and update it as
+%cluster state and requirements change. They are pluggable and mutable, meaning
+%each cluster admin can implement their own and dynamically update them as
+%cluster requirements and conditions change.
+%
+%The metrics in scope are the ones sent by the scheduler, and include wait time,
+%job completion time, utilization, cost, etc. 
+%
+%We design both rules and policies as interfaces, enabling them to
+%be pluggable and user-defined. Policies implement an
+%\texttt{approveRequest()} method, which returns true when an external trader's
+%request is feasible, where as rules implement a \texttt{Broken()} method
+%signature, triggering the trader to request resources when the cluster state
+%breaks the conditions.  
+%
+%A cluster admin aiming to reduce wait time would create a rule that breaks when
+%average wait time exceeds the specified threshold, and a policy that refuses to
+%provide resources under similar conditions. Optimizing for utilization, an
+%admin would create a rule that breaks when utilization surpasses a resource
+%utilization threshold and a policy that denies resources for the same
+%criterion. Tuning the policies as requirements change can be achieved by
+%increasing or decreasing the respective thresholds. Stopping all trading rules
+%and policies is another way to adjust the mechanism. An admin might disable
+%policies altogether during peak times to enhance system predictability. 
+
+% TRADER SECTION START
+
 %Our mechanism offers bidirectional trading, allowing clusters to trade
 %resources with one another. It also enables trading with multiple clusters, so
 %clusters can trade resources with more than one cluster at a time.
