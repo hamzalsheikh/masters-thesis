@@ -40,49 +40,48 @@ the design of the trader itself.
 \section{Scheduler}
 % introducing the notion of minimal intursivity
 \subsection{Requirements}
+
 Cluster scheduling have been widely studied and remains a prominent area of
 research. Our objective in relation to scheduling is not to replace the
 clusters' scheduling algorithm nor interfere with its scheduling decisions, but
 to improve the cluster's performance while minimizing friction and interaction
-with the trader. It it also worth noting that the scheduler does not directly
-interact with the broader multi-cluster environment but only with its own
-trader, reducing the communication surface area and keeping local scheduling
-independent from the mechanism. [NEEDS BETTER WORDING]
+with the mechanism's components. This minimally intrusive approach allows us to
+keep the scheduler independent from the mechanism and limit all of the
+mechanism's logic and interactions to its components.
 
-The scheduler's role in the mechanism comprises of passing on cluster state to
-local trader, providing resources for trades, and receiving resources from
-trades. Cluster state are measurements necessary to inform trading decisions.
-These metrics are typically collected in cluster schedulers for performance
-analysis and monitoring and include wait time, cost of compute/memory,
-utilization etc.
+The scheduler's role in the mechanism comprises of transmitting cluster state
+and supplying and receiving resources from trades. Cluster state are
+measurements necessary for make informed trading decisions. These metrics are
+typically collected in cluster schedulers for performance analysis and
+monitoring and include wait time, cost of compute/memory, utilization etc.
 
 \noindent Providing and receiving resources are an extension of the cluster's
 ability to add new nodes and allocate resources on existing ones. 
 
-Thus scheduling is detached from trading and only an interface is required to
-connect the two modules together, allowing any scheduling algorithm already
-running in a cluster to remain unchanged. This lays the ground to the general
-requirements for a scheduler to operate in the mechanism, and shows that a
-specific scheduling algorithm is not required for our mechanism. With that
-being said, we now present our scheduling algorithm and discuss the underlying
-design decisions. 
+%Hence, scheduling is independent from trading; an interface is required to
+%connect the two modules together, allowing any scheduling algorithm already
+%running in a cluster to remain unchanged.
+
+This lays the ground to the general requirements for a scheduler to operate in
+the mechanism. With that being said, we now present our scheduling algorithm
+and discuss the underlying design decisions. 
 
 \subsection{Design}
 % delay scheduling 
 
 The base of our scheduling algorithm is delay scheduling [CITE] due to its
-simplicity and []focus on data locality. In delay scheduling, a job is first
-assigned the lowest level 0, allowing it to only be scheduled on the node its
-data is at. The job is subsequently bumbed to higher levels as it fails to get
-it scheduled in close proximity, permitting the scheduler to schedule the job
-further away from its data as the wait time of the job increases. Consequently
-the leveling represent the job's expectated distance from its data. This notion
-of proximity and gradual drifting[] is extended to include external clusters in
-our mechanism. Jobs already anticipating poor data locality would be the ones
-more likely to be scheduled on an external cluster. This insures fair
-scheduling even as we extend the scope of scheduling to a multi-cluster
-environment. These jobs would also incur the least percentage reduction in
-performance when scheduled in a foreign cluster.
+simplicity and focus on data locality. In delay scheduling, a job is first
+assigned the lowest level queue 0, allowing it to only be scheduled on the node
+its data is located at. The job is subsequently bumbed to higher queue levels as it
+fails to get scheduled in close proximity, permitting the scheduler to
+schedule the job further away from its data as the wait time of the job
+increases. Consequently the leveling represent the job's expectated distance
+from its data. This notion of proximity and gradual drifting is extended to
+include external clusters in our mechanism. Jobs already anticipating poor data
+locality would be the ones more likely to be scheduled on an external cluster.
+This insures fair scheduling even as we extend the scope of scheduling to a
+multi-cluster environment. These jobs would also incur the least percentage
+reduction in performance when scheduled in a foreign cluster.
 
 \figref{fig1} includes the architecture of the scheduler described here. The
 different queues represent different levels a job can be in. The incoming and
