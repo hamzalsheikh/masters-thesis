@@ -114,37 +114,23 @@ resources and give away its own resources to other clusters. Clusters only
 communicate with each other through their traders, which gets configured by the
 cluster adminstrator. 
 
+%Incentive intro
+Traders can either be cooperative or opportunistic. In a cooperative trading
+environment, trading does not need an incentive, and furthers the overall
+performance of the participating clusters. A straightforward use-case to this
+model is organizations with multiple clusters; allowing the exchange of
+resources benefits the organization as a whole. The opportunistic model
+facilitates trading between self-serving clusters by introducing a monetary
+incentive in a trade. Traders would way in the cost and profit of participating
+in a trade and that would be the primary motivation to giveaway resources.  
+
 The trader is responsible for keeping the cluster's state in conformity with a
 desired state. As shown in the figure, the trader establishes a cluster state
-stream with the scheduler, continously sending up-to-date cluster information.
-It includes the overall utilization, average job completion time, and current
-cost of resources. This stream allows the trader to monitor the cluster state
-and make trading decisions based on the current state of the cluster.
-
-We will first examine what happens when the cluster needs resources, marked in
-red in figref{fig1} and detailed in the following algorithm.
-
-% Example Algorithm
-\begin{figure}[H]
-\begin{algorithm}[H]
-\caption{Outgoing Trading Algorithm}
-\begin{algorithmic}
-  \Procedure{Trade}{$R_b$} \Comment{$R_b$ = broken rule}
-    \State $R_{action} \gets Action(R_b)$
-    \State $level_N Jobs \gets GetJobs(n)$ \Comment{get from scheduler}
-    \State $virtualNodeSize \gets calculateNodeSize(R_{action}, level_N Jobs)$
-    \For{traders in multi-cluster environment}
-      \State $contract \gets SendTradeRequest(virtualNodeSize)$
-    \EndFor
-    \State $contracts \gets ReceiveTradeResponses$ \Comment{list of approved contracts}
-    \State \textbf{return} $contract_{best}$\Comment{best virtual node is sent to scheduler}
-  \EndProcedure
-\end{algorithmic}
-\end{algorithm}
-\caption{Outgoing Trading Algorithm}
-\end{figure}
-
-The desired state is declared through a set of rules, which are
+stream with the scheduler, continously receiving up-to-date cluster
+information. This information includes the overall cluster utilization, average
+job completion time, and current cost of resources. This stream allows the
+trader to monitor and make trading decisions based on the current state of the
+cluster. The desired state is declared through a set of rules, which are
 configurations dynamically passed to the trader shown below:  
 
 \begin{figure}[H]
@@ -158,66 +144,151 @@ configurations dynamically passed to the trader shown below:
   \caption{Rules}
 \end{figure}
 
-The rule's condition represents the desired value of a measurement sent by the
-scheduler to the trader like utilization below 80\%. The rule implements a
+The rule's condition represents the desired state of a measurement sent by the
+scheduler to the trader, like utilization below 80\%. The rule implements a
 Broken method which allows the trader to run an action when the actual cluster
 state differs from the desired state. As the trader continously monitors the
 cluster state, it runs the broken methods of all rules to check whether any is
-broken. When a rule is broken, the trader's first step is to calculate the
-resources it needs to request from other traders. To do that, it first requests
-the last level jobs from the scheduler, resembling the jobs that would already
-be scheduled further away from their data. The trader consults the broken rule
-again, where the action variable specifies how to estimate the needed
-resources. 
+broken.
 
-There are currently two ways to estimate the resource request: 
+The following algorithm details what happens when a rule is broken, also marked
+in red in \figref{fig1} 
+
+\begin{figure}[H]
+\begin{algorithm}[H]
+\caption{Outgoing Trading Algorithm}
+\begin{algorithmic}
+  \Procedure{Trade}{$R_b$} \Comment{$R_b$ = broken rule}
+    \State $R_{action} \gets Action(R_b)$
+    \State $level_N Jobs \gets GetJobs(n)$ \Comment{get from scheduler}
+    \State $virtualNodeSize \gets calculateNodeSize(R_{action}, level_N Jobs)$
+    \If{Incentivized}
+      \State $incentive \gets calculateIncentive()$
+    \EndIf
+    \For{traders in multi-cluster environment}
+      \State $contract \gets SendTradeRequest(virtualNodeSize, incentive)$
+    \EndFor
+    \State $contracts \gets ReceiveTradeResponses$ \Comment{list of approved contracts}
+    \State \textbf{return} $contract_{best}$\Comment{best virtual node is sent to scheduler}
+  \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\caption{Outgoing Trading Algorithm}
+\end{figure}
+
+When a rule is broken, the trader's first step is to estimate the resources it
+needs to request from other traders. Requested resources are abstracted as a
+virtual node. A virtual node includes the needed resources, time, and other
+constraints like hardware or OS needed for the jobs to run. Virtual nodes 
+translate to the total resources acquired in the external cluster, not into a
+physical node. 
+
+% The trader specifies the smallest partition it accepts in the
+% contract, usually the size of the smallest job it has in the jobs list.
+
+The resource estimate is calculuated by first requesting the last level jobs
+from the scheduler, resembling the jobs that would already be scheduled further
+away from their data. The rule's action variable specifies how to estimate the
+needed resources. There are currently two ways to estimate the resource
+request:
+
 \begin{enumerate}
 
-  \item \textbf{Optimized:} A greedy approach that stacks jobs efficiently over
-    time on the requested node.
+  \item \textbf{Efficient Stacking:} A greedy approach that stacks jobs
+    efficiently over time on the requested node. Starts with oldest job in the
+    $level_N$ queue and add one job at a time while minimizing the size of the
+    node until all jobs are included in the estimation or a constraint is
+    reached.
 
-  \item \textbf{Take All:} Calculates resources as if all is scheduled at time
-    0 on the requested node.
+  \item \textbf{Zero Wait:} An approach that starts jobs in queue at the same
+    time. Starts with oldest job and adds one job at a time at $t_0$ until all
+    jobs are included in the estimation or a constraint is reached.
 
 \end{enumerate}
 
-The first approach allows the trader to reduce the size of the request which in
-turn increases the chances of it getting approved, whereas the other approach
-eagerly tries to increase the benefit from a trade.
+Efficient stacking allows the trader to reduce the size of the virtual node
+which in turn reduces the cost of the trade and increases the chances of it
+getting approved, however at a higher computation cost. Zero wait increases the
+possible benefit from a trade at a higher cost per node and lower computation
+cost.  
 
-After estimaing the needed resources, the trader then broadcasts a contract to
-all participating clusters, and waits for replies. After receiving approved
-contracts, the trader approves the best contract, and receives the virtual node
-information from the foreign trader. It then sends the virtual node for the
-scheduler to start scheduling jobs on it.
+Virtual nodes have constraints like a maximum number of cores,
+size of memory, time, or a budget. 
 
-The trader is also responsible for accepting/rejecting incoming requests.
-Outlined in the blue section of figure one and detailed in the following
-algorithm: 
+%version more appealing on a lower budget. It would be advantagous to request
+%resources from another trader if it is cheaper than scaling up the cluster
+%size. [Might want to introduce budgeting a bit earlier]
+
+After estimaing the needed resources, the trader calculates the incentive if
+it's participating in an opportunistic model. Incentives are determined by the
+cost of internally scaling up the cluster, if that is possible, the
+severity of the broken rules, and the budget assigned for trading.
+
+The trader then broadcasts a contract to all participating clusters, and waits
+for replies. After receiving approved contracts, the trader approves either
+approves the first contract it gets, or the best contract if a criterion is
+passed, and then receives the virtual node information from the foreign trader.
+It then sends the virtual node information for the scheduler to start
+scheduling jobs on it.
+
+There are various ways to rank contracts, like cost and physical proximity. 
+
+The trader is also responsible for accepting or rejecting incoming requests.
+This functionality is outlined in the yellow section in \figref{fig1} and
+detailed in the following algorithm: 
 
 \begin{figure}[H]
 \begin{algorithm}[H]
 \caption{Incoming Trading Algorithm}
 \begin{algorithmic}
-  \Procedure{Trade}{$T_{request}$} \Comment{$T_{request}$ = trade request}
-    \For{$P_{incoming}$ in Incoming policies}
-      \If{$P_{incoming}(ccs, T_{request}) \not= true$} \Comment{ccs = current cluster state}
-      \State \textbf{return} $false$ \Comment{Could not approve trade}
+  \Procedure{ApproveTrade}{$contract$} \Comment{$contract$ = trade request}
+    
+    \If{$ ccs \leq contract.resources$} \Comment{ccs = current cluster state}
+      \State \textbf{return} $false$ \Comment{couldn't approve trade}
+    \EndIf
+
+    \For{$P$ in Policies}
+      \If{$P(ccs, T_{request}) \not= true$} 
+      \State \textbf{return} $false$ \Comment{couldn't approve trade}
       \EndIf
     \EndFor
+    \State $contract_r \gets sendTradeResponse$ \Comment{$contract_r$ = trade response}
+    \State $contract_a \gets receiveContractApproval$ \Comment{$contract_a$ = approved trade}
+
     \State $virtualNode \gets getVirtualNode(T_{request})$ \Comment{from scheduler}    
-    \State \textbf{return} $virtualNode$ \Comment{Trade Approved}
+    \State \textbf{return} virtualNode \Comment{Trade Approved}
   \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 \caption{Incoming Trading Algorithm}
 \end{figure}
 
-After receiving a contract request, the trader consults the incoming policy and the
-current cluster state, and decides whether to approve the contract. If the
-trader gets picked by the foreign cluster, the trader then requests the needed
-resources from the scheduler and sends the node information back to the foreign
-trader.
+After receiving a trade request as a contract from other traders, the trader
+first checks if there's enough resources in the cluster to accommodate the
+trade, then loops over a set of trading policies set by the cluster admin.
+Policies are symmetrical to rules for incoming requestes. They dictate how the
+trader responds to received resource requests. The structure of a policy is
+as follows:
+
+\begin{figure}[H]
+  \begin{lstlisting}[language=go]
+    type Policy struct {
+      Conditions // cluster state that allows approval
+      Incentive // offer from external cluster
+      ApproveRequest(request) bool 
+    } 
+  \end{lstlisting}
+  \caption{Custom Policy implements an approveRequest method}
+\end{figure}
+
+Conditions are a set of variables that specify the acceptable threshold cluster
+state should be in order to accept a trade. For each policy, the minimum
+incentive is also specified which can be a function of the conditions,
+decreasing if the cluster is not busy. Lastly, ApproveRequest() is the method
+the trader run to know if it is okay to accept a trade according to this
+policy.
+
+If all policies approve the trade, the trader sends the a positive trade responseand waits for the requesting trader to approve the contract. Once the contract is approved, the trader then requests the resources to be reserved from the scheduler, creates the virtual node and sends it to the requesting trader. 
 
 % add trading request algorithm
 
@@ -240,19 +311,6 @@ trader.
 %the conditions under which the the cluster begins requesting resources from
 %external clusters.
 % policies intro
-\begin{figure}[H]
-  \begin{lstlisting}[language=go]
-    type Policy struct {
-      Name  string
-      Conditions // cluster state that allows approval
-      Incentive // offer from external cluster
-      ApproveRequest(request) bool 
-    } 
-  \end{lstlisting}
-  \caption{Custom Policy implements an approveRequest method}
-\end{figure}
-Policies are asymmetrical to rules, in that they dictate how the trader
-responds to received resource requests.
 
 %Both rules and policies act as knobs to tune the mechanism and update it as
 %cluster state and requirements change. They are pluggable and mutable, meaning
