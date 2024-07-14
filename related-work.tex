@@ -34,49 +34,48 @@
 %
 %\blah
 %
-The three major cloud providers, GCP, Azure, and AWS offer services for
-managing multi-cluster environments. However, they are limited to tools for
-deployment and load balancing.   
+This section explores various approaches and solutions that have been proposed and implemented to address the complexities of multi-cluster environments.
+
+Major cloud providers, Google Cloud Platform, Microsoft Azure, Amazon Web
+Services, and Hashicorp's Nomad offer services for managing multi-cluster
+environments. These tools offer various ways for exposing cluster resources to
+each other with a focus on load balancing between clusters and directed towards
+allowing services to easily discover each other in a multi-cluster environment.
+Our approach takes a different route by concealing each cluster's workload and
+exposing resources needs, allowing clusters to dynamically expand and shrink
+without exposing jobs and services on different clusters to one another.  
+
 %[CITE https://cloud.google.com/kubernetes-engine/docs/fleets-overview
 %https://aws.amazon.com/blogs/containers/multi-cluster-management-for-kubernetes-with-cluster-api-and-argo-cd/
-%https://azure.microsoft.com/en-us/products/kubernetes-fleet-manager#faq]
-Hashicorp's Nomad offers first-class support of multi-cluster environments
-through their multi-region federation service. However this exposes the
-connected clusters' control plane, while allowing Jobs to run on all the
-federated clusters. 
-%[Cite
+%https://azure.microsoft.com/en-us/products/kubernetes-fleet-manager#faq] [Cite
 %https://developer.hashicorp.com/nomad/tutorials/manage-clusters/federation]
-There are multiple open source projects building tools for multi-cluster
-connectivity. Cilium, Istio, and Linkerd are all service meshes that offers
-multi-cluster connectivity through various technologies.
+In addition to cloud providers' offerings, multiple open source projects 
+offer tools for multi-cluster management. Cilium, Istio, and Linkerd are
+all service meshes that offers multi-cluster connectivity. 
 % [CITE https://cilium.io/use-cases/cluster-mesh/
 % https://linkerd.io/2.15/features/multicluster/
 % https://istio.io/latest/docs/setup/install/multicluster/] 
 Submariner and skupper are both early stage open source projects allowing
-direct multi K8s cluster networking. 
+direct multi kubernetes cluster networking. 
 %[CITE https://submariner.io  , https://skupper.io]
 
-It is important to note that these projects offer the network connectivity for
-multi-cluster environemnts, exposing the services of the clusters to one other,
-without involving/exposing the control/scheduling layer of these clusters. We
-later introduce cross-cluster scheduling capabilities steered by  actionable
-policies to enhance the performance of multi-cluster environments.
+These projects offer the network connectivity for multi-cluster environemnts,
+exposing the services of the clusters to one other, without exposing the
+control layer of these clusters. Our mechanism can be thought off as the application layer on top of the network layer, introducing new sharing patterns between the clusters.
 
-Sky pilot is an intercloud broker that was developed to run workloads on
-different cloud providers, reducing costs and preventing a provider lockup.
-This papers offers a different point of view of how clussters can interact with
-one another. 
+Sky pilot offers a different perspective to managing multi-cluster
+environments. It is an intercloud broker that was developed to run workloads on
+different cloud providers to reduce costs and prevent provider lockup. Their
+approach removes the need for cluster connectivity, relying on the
+broker for efficient workload execution, whereas our approach allows each
+cluster to make its own clustering decisions.
+
 %[CITE https://www.usenix.org/system/files/nsdi23-yang-zongheng.pdf]
 Lastly, Liqo is a kubernetes multi-cluster project that enables workload
-offloading between cllusters. It utilizes a peer-to-peer connection between
-clusters and offers a static policy for allowing clusters to offload and accept
-the offloading of foreign workload. The Liqo system does not infer
-multi-cluster scheduling decisions from cluster state, they focus on creating a
-static continium of resources accross clusters. Our work offers dynamic
-scheduling between the clusters, allowing the clusters to benefit from
-infromation they have about their cluster state. Moreover, a notion of
-incentives is introduced to possibily encourage the exchange of resources
-between the clusters.  
+offloading between clusters. It utilizes a peer-to-peer connection between
+clusters and offers a static policy for allowing clusters to offload their
+workloads on external clusters. Their focus is to create a continium of
+resources across multiple clusters, exposing resources to one another. Our mechanism have a very similar goal but uses trading as the basis of creating a dynamic continium of resources when needed.  
 %[CITE liqo]
 
 In the next section, we introduce our mechanism and show how it fits in the
