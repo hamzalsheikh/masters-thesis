@@ -1,32 +1,42 @@
 %%% -*-LaTeX-*-
 
-\chapter{Introduction}
+\chapter{Introduction} 
 
+In this chapter, we will first set the background, introduce the motivation
+behind the work and outline the rest of the thesis.  
+
+\section{Background}
 % clusters
-As modern computer systems and their workloads scaled, running on a single
-machine was no longer feasible. Distributed systems became an integral field to
-keep the growth and innovation running. However, it became almost impossible to
-manually manage systems at this scale, and a need to orchestrate the underlying
-infrastructure emerged. 
+As modern computer software and its workload scaled, operating on a single
+machine became infeasible. Software started evolving to run on multiple
+machines, introducing challenges in managing the infrastructure and the
+software capable on running on such diverse setups. These systems evolved to
+become computer clusters, a set of interconnected machines grouped together to
+ehance the performance and reliability of such systems. 
 
 % containrization
-As the infrastructure became more heterogenous, consistency accross different
-environments became crucial. Containrization came in place as a way to ensure
-that applications runs consistently accross a spectrum of environments. 
+As the infrastructure and development environments became more diverse,
+consistent deployment across the cluster was achieved through shipping
+containers that run applications on all the infrastructure. Containrization
+enables the encapsulation of applications into portable units of software.
+These units share the operating systems' kernel while being isolated from one
+another. Offering isolation while being lightweight compared to virtual
+machines masively contributed in their adoption and the emergence of a flexible
+and robust infrastructure. 
 
 % container orchestration systems
-As such, container orchestration systems like Kubernetes (K8s), Docker Swarm,
-and Nomad [CITE] became widely used and adopted for offering the necessary
-tools to manage the infrastructure while maintaining a high level of portability
-and resource utilization. 
+Consequently, container orchestration systems like Kubernetes, Docker Swarm, and
+Nomad [CITE] became widely adopted for offering the necessary tools to manage
+the infrastructure by automating the deployment, fault tolerance, and scaling
+of software run in containers. They also handle the scheduling of such
+containers on the various machines and oversee proper resource utilization.  
 
 % Solutions on one cluster systems
-Scheduling jobs on computer clusters, which is the decision of choosing on
-which node in a cluster this container is going to run, is a throughly studied
-field. Researchers built systems optimizing different aspects of clluster
-scheduling. To combat low server utilization and diverse users' workloads,
-systems have been developed to allow diverse workloads to run on the same
-cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate} with
+Scheduling is particularly important due to its major effect on overall
+cluster performance. Researchers built systems optimizing different aspects of
+cluster scheduling. To combat low server utilization and diverse users'
+workloads, systems have been developed to allow diverse workloads to run on the
+same cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate} with
 average server utilization in some data centers ranging from 10\% to 50\%
 \cite{lo_heracles_2015}. Distributed scheduling in a single cluster was
 introduced to overcome the limitations of centralized schedulers, further
@@ -36,11 +46,11 @@ reducing latency and improving performance on heterogenous workloads.
 %OMEGA]
 
 % one cluster limitations
-Running multiple workloads on a single cluster introduces a new set of problems
-like increased interference between jobs. 
+However, running multiple workloads on a single cluster introduces a new set of problems
+like increased interference between jobs 
 %[CITE https://ieeexplore.ieee.org/abstract/document/8397647]
-Distributed schedulers make less than optimal scheduling decisions due to their
-limited visibility of cluster resources
+, whereas distributed schedulers make less than optimal scheduling decisions due to their
+limited visibility of cluster resources.
 %[CITE
 %https://www.usenix.org/system/files/conference/atc15/atc15-paper-karanasos.pdf
 %https://www.usenix.org/system/files/conference/atc15/atc15-paper-delgado.pdf]
@@ -53,17 +63,26 @@ For the reasons mentioned above, as well as the need for workload and
 geographical isolation, organizations are expanding their infrastructure into
 multuiple clusters. [CITE
 https://cloud.google.com/kubernetes-engine/fleet-management/docs/multi-cluster-use-cases]
-\cite{google-cloud-blog} Organizations are now equipped with different clusters
+\cite{google-cloud-blog} They are now equipped with different clusters
 for different workloads and teams \cite{patel_what_2022, li_lyra_2023}. For
 example, 50\% of Kubernetes \cite{borg} end users have 10+ clusters
-\cite{noauthor_cncf_2023} , with companies like Mercedes nearing 1000 clusters
-\cite{noauthor_mercedes-benz_2023}. Airbnb segmented its clusters into more
-than 30 types, and orchestrate more than a 100 cluster in their infrastructure
-[CITE
+\cite{noauthor_cncf_2023}, with companies like Mercedes nearing one thousand
+clusters \cite{noauthor_mercedes-benz_2023}. Airbnb segmented its clusters into
+more than thirty types, and orchestrate more than a hundred cluster in their
+infrastructure. [CITE
 https://medium.com/airbnb-engineering/dynamic-kubernetes-cluster-scaling-at-airbnb-d79ae3afa132] 
 
-Although multi-cluster environments offer lots of advantages, partitioning
-resources still comes with a cost and an increased overhead.\cite{adv-dis-mutli}.\\
+Moreover, multi-cluster environments prevent vendor lock-in, allowing
+organizations to run their workloads with multiple cloud providers. Although
+multi-cluster environments offer lots of advantages, they come with a cost.
+Resource fragmentation across the clusters reduce effeciency and may lead to
+underutilization \cite{adv-dis-mutli}. They also increase the complexitiy of
+managing the infrastructure as well as possible increased cost and
+orchestration overhead. For that, systems and tools has been developed to solve
+the challenges multi-cluster environments have. 
+
+
+\section{Motivation}
 
 % introducing capacity loaning
 Researchers at ByteDance observed that their inference cluster utilization is
@@ -92,20 +111,24 @@ guarantee its eventual scheduling \cite{zaharia_delay_2010}.
 % Introduce the notion of the liquid computing
 Liquid computing have been introduced as an architectural paradigm that extends
 resource usage into multiple users, treating the underlying infrastructure as a
-continuum of computatioinal resources. 
+continuum of computatioinal resources. Under this paradigm, participating users
+work together by sharing their computational resources for increased
+scalability and resource utilization. The rules established for the continuum
+allow users to keep the ownership of their resources while participating in the
+resource sharing when needed.
 %[CITE G. Gruman, “Welcome to the next tech revolution: Liquid computing,”
 %https://www.infoworld.com/article/2608440/article.html, Jul. 2014, (Re-
 %trieved: Mar. 2022), LIQO]
 
 This thesis presents a new trading mechanism which allows clusters to trade
-resources with each other through user-defined policies, dictating which
-performance metrics they plan to optimize and how aggresive their strategy is.
-We do that by treating multi-cluster environments as a continuum of resources
-without forfeiting their ownership. The mechanism extends capacity loaning to
-serve multiple clusters and be workload-agnostic while presenting a possible
-incentive for loaning clusters. We also utilize delay scheduling to serve as
-the scheduling algorithm for localityconcerns, however any scheduling technique
-would suffice.
+resources with each other through user-defined policies and rules, dictating
+which performance metrics they plan to optimize and how aggresive their
+strategy is. We do that by creating a continuum of resources between
+participating clusters governed by the collective clusters' trading strategies.
+Extending capacity loaning to serve multiple clusters and be workload-agnostic
+while presenting a possible incentive for loaning clusters. We utilize delay
+scheduling to serve as the scheduling algorithm for the cluster, creating a
+solid distinction between local and external resources.
 %\hl{possible names?: capacity trading /resource trading / resource fluidity},
 %we can relate to sky computing too % GO BEYOND THEIR WORK / EVEN MORE THAN
 %GENERALIZATION % We plan to generalize loaning to be non-workload specific.
@@ -113,5 +136,23 @@ would suffice.
 %borrowing/lending, buying/selling, or negotiating resources. % or (to trade
 %presources)
 
-\section{Background}
 \section{Outline}
+The rest of this thesis is organized as follows:
+\begin{enumerate}
+  
+  \item Chapter 2 provides the related work and establishes the scope and the
+    position of this work in the general space of multi-cluster environments
+    management.
+
+  \item Chapter 3 describes the architecture of the trading mechanism,
+    detailing the design decisions and their implications.  
+
+  \item Chapter 4 details the implementation of the simulator used to test the
+    mechanisms' performance.
+
+  \item Chapter 5 evaluates the mechanism under various constraints and workloads. 
+
+  \item Chapter 6 concludes the thesis, explaining when it would be benefitial
+    to participate in such a multi-cluster environment.  
+
+\end{enumerate}
