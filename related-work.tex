@@ -34,30 +34,26 @@
 %
 %\blah
 %
-This section explores various approaches and solutions that have been proposed and implemented to address the complexities of multi-cluster environments.
+This section examines various approaches and solutions proposed and implemented
+to address the complexities of multi-cluster environments.
 
 Major cloud providers, Google Cloud Platform, Microsoft Azure, Amazon Web
 Services, and Hashicorp's Nomad offer services for managing multi-cluster
-environments. These tools offer various ways for exposing cluster resources to
-each other with a focus on load balancing between clusters and directed towards
-allowing services to easily discover each other in a multi-cluster environment.
-Our approach takes a different route by concealing each cluster's workload and
-exposing resources needs, allowing clusters to dynamically expand and shrink
-without exposing jobs and services on different clusters to one another.  
+environments. These tools provide various ways for exposing cluster resources
+to each other, with a focus on load balancing between clusters and facilitating
+service discovery in a multi-cluster setting. Our approach takes a different
+route by concealing each cluster's workload and solely exposing resources
+needs. This strategy allows clusters to dynamically expand and contract with
+minimal exposure to the underlying workloads and services \cite{noauthor_fleet_nodate, noauthor_azure_nodate, noauthor_multi-region_nodate}.
 
-%[CITE https://cloud.google.com/kubernetes-engine/docs/fleets-overview
-%https://aws.amazon.com/blogs/containers/multi-cluster-management-for-kubernetes-with-cluster-api-and-argo-cd/
-%https://azure.microsoft.com/en-us/products/kubernetes-fleet-manager#faq] [Cite
-%https://developer.hashicorp.com/nomad/tutorials/manage-clusters/federation]
-In addition to cloud providers' offerings, multiple open source projects 
-offer tools for multi-cluster management. Cilium, Istio, and Linkerd are
-all service meshes that offers multi-cluster connectivity. 
-% [CITE https://cilium.io/use-cases/cluster-mesh/
-% https://linkerd.io/2.15/features/multicluster/
-% https://istio.io/latest/docs/setup/install/multicluster/] 
-Submariner and skupper are both early stage open source projects allowing
-direct multi kubernetes cluster networking. 
-%[CITE https://submariner.io  , https://skupper.io]
+In addition to cloud providers' offerings, multiple open source projects offer
+tools for multi-cluster management. Cilium, Istio, and Linkerd are all service
+meshes that offers multi-cluster connectivity. Those service meshes expose
+gateways between clusters for communication, allowing services to communicate
+through the clusters in the environment \cite{noauthor_cluster_nodate,
+noauthor_multi-cluster_nodate-2, noauthor_install_nodate}. Submariner and
+skupper are both early stage open source projects allowing direct multi
+kubernetes cluster networking \cite{noauthor__nodate, noauthor_skupper_nodate}. 
 
 These projects offer the network connectivity for multi-cluster environemnts,
 exposing the services of the clusters to one other, without exposing the
@@ -68,15 +64,16 @@ environments. It is an intercloud broker that was developed to run workloads on
 different cloud providers to reduce costs and prevent provider lockup. Their
 approach removes the need for cluster connectivity, relying on the
 broker for efficient workload execution, whereas our approach allows each
-cluster to make its own clustering decisions.
+cluster to make its own clustering decisions \cite{yang_skypilot_nodate}.
 
-%[CITE https://www.usenix.org/system/files/nsdi23-yang-zongheng.pdf]
 Lastly, Liqo is a kubernetes multi-cluster project that enables workload
 offloading between clusters. It utilizes a peer-to-peer connection between
 clusters and offers a static policy for allowing clusters to offload their
 workloads on external clusters. Their focus is to create a continium of
-resources across multiple clusters, exposing resources to one another. Our mechanism have a very similar goal but uses trading as the basis of creating a dynamic continium of resources when needed.  
-%[CITE liqo]
+resources across multiple clusters, exposing resources to one another. Our
+mechanism have a very similar goal but uses trading as the basis of creating a
+dynamic continium of resources when needed \cite{iorio_computing_2023,
+noauthor_liqo_nodate}. 
 
 In the next section, we introduce our mechanism and show how it fits in the
 multi-cluster space.
