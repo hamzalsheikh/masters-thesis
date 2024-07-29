@@ -25,58 +25,51 @@ machines masively contributed in their adoption and the emergence of a flexible
 and robust infrastructure. 
 
 % container orchestration systems
-Consequently, container orchestration systems like Kubernetes, Docker Swarm, and
-Nomad [CITE] became widely adopted for offering the necessary tools to manage
-the infrastructure by automating the deployment, fault tolerance, and scaling
-of software run in containers. They also handle the scheduling of such
-containers on the various machines and oversee proper resource utilization.  
+Consequently, container orchestration systems like Kubernetes, Docker Swarm,
+and Nomad \cite{noauthor_swarm_0100, verma_large-scale_2015,
+noauthor_multi-region_nodate} became widely adopted for offering the necessary
+tools to manage the infrastructure by automating the deployment, fault
+tolerance, and scaling of software run in containers. They also handle the
+scheduling of such containers on the various machines and oversee proper
+resource utilization.  
 
 % Solutions on one cluster systems
-Scheduling is particularly important due to its major effect on overall
-cluster performance. Researchers built systems optimizing different aspects of
-cluster scheduling. To combat low server utilization and diverse users'
-workloads, systems have been developed to allow diverse workloads to run on the
-same cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate} with
+Scheduling is particularly important due to its major effect on overall cluster
+performance. Researchers built systems optimizing different aspects of cluster
+scheduling. To combat low server utilization and diverse users' workloads,
+systems have been developed to allow diverse workloads to run on the same
+cluster \cite{bhattacharya_hierarchical_2013, hindman_mesos_nodate} with
 average server utilization in some data centers ranging from 10\% to 50\%
 \cite{lo_heracles_2015}. Distributed scheduling in a single cluster was
 introduced to overcome the limitations of centralized schedulers, further
-reducing latency and improving performance on heterogenous workloads. 
-%[CITE
-%https://www.usenix.org/conference/osdi14/technical-sessions/presentation/boutin,
-%OMEGA]
+reducing latency and improving performance on heterogenous workloads
+\cite{schwarzkopf_omega_2013, boutin_apollo_2014}. 
 
 % one cluster limitations
-However, running multiple workloads on a single cluster introduces a new set of problems
-like increased interference between jobs 
-%[CITE https://ieeexplore.ieee.org/abstract/document/8397647]
-, whereas distributed schedulers make less than optimal scheduling decisions due to their
-limited visibility of cluster resources.
-%[CITE
-%https://www.usenix.org/system/files/conference/atc15/atc15-paper-karanasos.pdf
-%https://www.usenix.org/system/files/conference/atc15/atc15-paper-delgado.pdf]
-There is also a physical limit to how much a cluster can be scaled without
-significantly reducing orchestration performance. [CITE
-https://kubernetes.io/docs/setup/best-practices/cluster-large/].
+However, running multiple workloads on a single cluster introduces a new set of
+problems like increased interference between jobs \cite{garg_workload_2017},
+whereas distributed schedulers make less than optimal scheduling decisions due
+to their limited visibility of cluster resources \cite{karanasos_mercury_2015,
+delgado_hawk_2015}. There is also a physical limit to how much a cluster can be
+scaled without significantly reducing orchestration performance
+\cite{noauthor_considerations_nodate}. 
 
 % Introducing multi cluster environments
 For the reasons mentioned above, as well as the need for workload and
 geographical isolation, organizations are expanding their infrastructure into
-multuiple clusters. [CITE
-https://cloud.google.com/kubernetes-engine/fleet-management/docs/multi-cluster-use-cases]
-\cite{google-cloud-blog} They are now equipped with different clusters
-for different workloads and teams \cite{patel_what_2022, li_lyra_2023}. For
-example, 50\% of Kubernetes \cite{borg} end users have 10+ clusters
+multuiple clusters \cite{noauthor_multi-cluster_nodate}. They are now equipped
+with different clusters for different workloads and teams
+\cite{patel_what_2022, li_lyra_2023}. For example, 50\% of Kubernetes
+\cite{verma_large-scale_2015} end users have 10+ clusters
 \cite{noauthor_cncf_2023}, with companies like Mercedes nearing one thousand
 clusters \cite{noauthor_mercedes-benz_2023}. Airbnb segmented its clusters into
 more than thirty types, and orchestrate more than a hundred cluster in their
-infrastructure. [CITE
-https://medium.com/airbnb-engineering/dynamic-kubernetes-cluster-scaling-at-airbnb-d79ae3afa132] 
-
-Moreover, multi-cluster environments prevent vendor lock-in, allowing
-organizations to run their workloads with multiple cloud providers. Although
-multi-cluster environments offer lots of advantages, they come with a cost.
-Resource fragmentation across the clusters reduce effeciency and may lead to
-underutilization \cite{adv-dis-mutli}. They also increase the complexitiy of
+infrastructure \cite{noauthor_dynamic_nodate-1}. Moreover, multi-cluster
+environments prevent vendor lock-in, allowing organizations to run their
+workloads with multiple cloud providers. Although multi-cluster environments
+offer lots of advantages, they come with a cost. Resource fragmentation across
+the clusters reduce effeciency and may lead to under utilization
+\cite{noauthor_kubernetes_nodate}. They also increase the complexitiy of
 managing the infrastructure as well as possible increased cost and
 orchestration overhead. For that, systems and tools has been developed to solve
 the challenges multi-cluster environments have. 
@@ -115,10 +108,7 @@ continuum of computatioinal resources. Under this paradigm, participating users
 work together by sharing their computational resources for increased
 scalability and resource utilization. The rules established for the continuum
 allow users to keep the ownership of their resources while participating in the
-resource sharing when needed.
-%[CITE G. Gruman, “Welcome to the next tech revolution: Liquid computing,”
-%https://www.infoworld.com/article/2608440/article.html, Jul. 2014, (Re-
-%trieved: Mar. 2022), LIQO]
+resource sharing when needed \cite{iorio_computing_2023, noauthor_liqo_nodate}.
 
 This thesis presents a new trading mechanism which allows clusters to trade
 resources with each other through user-defined policies and rules, dictating
