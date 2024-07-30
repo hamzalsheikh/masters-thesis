@@ -3,26 +3,22 @@
 \chapter{The Multi-cluster Trading Mechanism}
 
 As the adoption of multi-cluster environments accelerates and the
-infrastructure continues to evolve to support more use-cases, we are presented
-with an opportunity to build tools on top of that and leverage the existing
-networking innovations to optimize how clusters interact in a multi-cluster
-environment. Since a multi-cluster environment is a loose definition, we define
-our multi-cluster environment as a one which clusters are discoverable to one
-another and implements the trading mechanism's API.
+infrastructure continues to evolve to support more use cases, there is an
+opportunity to develop tools that leverage existing networking solutions to
+optimize inter-cluster interactions in a multi-cluster environment. . Given the
+broad definition of a multi-cluster environment, we define our specific context
+as one in which clusters are discoverable to one another and implement the
+trading mechanism's API.
 
-We argue that it is possible to increase cluster resource utilization,
-decrease average job completion time, and/or reduce average cost by providing
-clusters with a resource trading mechanism allowing the virtual sharing of
-resources across clusters. 
-
-The trader is the component putting the mechanism in effect. It involves
-receiving policies as input from the user, communicating with other clusters'
-traders and facilitating the exchange of resources between them. It is the
-point of contact between the foreign clusters and the host cluster's scheduler.
+We argue that it is possible to increase cluster resource utilization, decrease
+average job completion time, and reduce cost by providing clusters with a
+resource trading mechanism that allows the virtual sharing of resources across
+clusters. 
 
 In this chapter we present the system design, discuss the role of the scheduler
-in the mechanism, explain what user-defined policies are and lastly describe
-the design of the trader itself. 
+in the mechanism, explain what user-defined policies and rules are, and
+describe the design of the trader itself. The following figure illustrates the
+mechanism's design and will be elaborated upon in the subsequent sections: 
 
 \begin{figure}[H]
   \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
@@ -42,51 +38,55 @@ the design of the trader itself.
 \subsection{Requirements}
 
 Cluster scheduling have been widely studied and remains a prominent area of
-research. Our objective in relation to scheduling is not to replace the
-clusters' scheduling algorithm nor interfere with its scheduling decisions, but
-to improve the cluster's performance while minimizing friction and interaction
-with the mechanism's components. This minimally intrusive approach allows us to
-keep the scheduler independent from the mechanism and limit all of the
-mechanism's logic and interactions to its components.
+research \cite{hindman_mesos_nodate, zaharia_delay_2010, patel_what_2022,
+li_lyra_2023, qiao_pollux_nodate, schwarzkopf_omega_2013,
+karanasos_mercury_2015, delgado_hawk_2015}. Our objective concerning scheduling
+is not to replace the clusters' scheduling algorithm nor interfere with its
+scheduling decisions, but to improve cluster performance while minimizing
+friction the mechanism's components. This minimally intrusive approach allows
+us to maintain the scheduler's independence from the mechanism and confine all
+of the mechanism's logic and interactions to its components.
 
 The scheduler's role in the mechanism comprises of transmitting cluster state
-and supplying and receiving resources from trades. Cluster state are
-measurements necessary for make informed trading decisions. These metrics are
+as well as supplying and receiving resources needed for trades. Cluster state are
+measurements necessary for making informed trading decisions. These metrics are
 typically collected in cluster schedulers for performance analysis and
-monitoring and include wait time, cost of compute/memory, utilization etc.
+monitoring and include wait time, infrastructure cost, and utilization.
 
 \noindent Providing and receiving resources are an extension of the cluster's
 ability to add new nodes and allocate resources on existing ones. 
 
-%Hence, scheduling is independent from trading; an interface is required to
-%connect the two modules together, allowing any scheduling algorithm already
-%running in a cluster to remain unchanged.
-
-This lays the ground to the general requirements for a scheduler to operate in
-the mechanism. With that being said, we now present our scheduling algorithm
-and discuss the underlying design decisions. 
+This lays the groundwork for the general requirements for a scheduler to
+operate in the mechanism. With that being said, we now present our scheduling
+algorithm and discuss the underlying design decisions. 
 
 \subsection{Design}
 % delay scheduling 
 
-The base of our scheduling algorithm is delay scheduling [CITE] due to its
-simplicity and focus on data locality. In delay scheduling, a job is first
-assigned the lowest level queue 0, allowing it to only be scheduled on the node
-its data is located at. The job is subsequently bumbed to higher queue levels as it
-fails to get scheduled in close proximity, permitting the scheduler to
-schedule the job further away from its data as the wait time of the job
-increases. Consequently the leveling represent the job's expectated distance
-from its data. This notion of proximity and gradual drifting is extended to
-include external clusters in our mechanism. Jobs already anticipating poor data
-locality would be the ones more likely to be scheduled on an external cluster.
-This insures fair scheduling even as we extend the scope of scheduling to a
-multi-cluster environment. These jobs would also incur the least percentage
-reduction in performance when scheduled in a foreign cluster.
+The foundation of our scheduling algorithm is delay scheduling
+\cite{zaharia_delay_2010}; it establishes a clear spectrum of how far away jobs
+can be scheduled from their data which we extend to encompass running jobs
+outside of the cluster and on external cluster. In delay scheduling, a job is
+first enqueued at the lowest level, queue zero, allowing it to only be
+scheduled on the node where its data is located. As the scheduler fails to
+schedule it in close proximity to its data, the job is subsequently bumped up
+to higher queue levels, allowing the scheduler to schedule the job further away
+from its data as the job wait time increases. Consequently the leveling
+represents the job's expectated distance from its data. This notion of proximity
+and gradual drifting is extended to include external clusters in our mechanism.
+Jobs with high wait times already anticipating poor data locality would be the
+ones more likely to be scheduled on an external cluster. This insures fair
+scheduling even as we extend the scope of scheduling to a multi-cluster
+environment. These jobs would also incur the least percentage reduction in
+performance when scheduled on an external cluster compared to being run
+locally.
 
-\figref{fig1} includes the architecture of the scheduler described here. The
-different queues represent different levels a job can be in. The incoming and
-outgoing arrows represents the exposed interface the trader utilize to
-communicate with the scheduler and will be further explained next.
+\figref{fig1} illustrates the architecture of the scheduler described here. The
+different queues represent different levels a job can be in. Colored squares
+represent nodes running external jobs and the grey ones represent nodes running
+local jobs. The incoming and outgoing arrows represents the exposed interface
+the trader utilizes to communicate with the scheduler and will be further
+explained in the next section.
 
 %Of course, more analysis could go in deciding what jobs would better fit being
 %exported to other clusters like jobs demanding less communiication with other
@@ -105,32 +105,31 @@ communicate with the scheduler and will be further explained next.
 
 \section{Trader} \label{trader}
 
-The trader is the central component of the mechanism. It facilitates the
-exchange of resources between clusters and encapsulates all trading logic. 
+The trader is the core component of the mechanism, facilitating the
+exchange of resources between clusters and encapsulating all trading logic. 
 
-This exchange is bidirectional, meaning a cluster can receive external
-resources and give away its own resources to other clusters. Clusters only
-communicate with each other through their traders, which gets configured by the
+This exchange is bidirectional, allowing a cluster to receive external
+resources and allocate its own resources to other clusters. Clusters 
+communicate solely through their traders, which are configured by the
 cluster adminstrator. 
 
-%Incentive intro
-Traders can either be cooperative or opportunistic. In a cooperative trading
-environment, trading does not need an incentive, and furthers the overall
-performance of the participating clusters. A straightforward use-case to this
-model is organizations with multiple clusters; allowing the exchange of
-resources benefits the organization as a whole. The opportunistic model
-facilitates trading between self-serving clusters by introducing a monetary
-incentive in a trade. Traders would way in the cost and profit of participating
-in a trade and that would be the primary motivation to giveaway resources.  
+Traders can either operate in a cooperative or opportunistic manner. In a
+cooperative trading environment, furthers the overall performance of
+participating clusters. A straightforward use-case for this model is
+organizations with multiple clusters; allowing the exchange of resources
+benefits the organization as a whole. On the other hand, the opportunistic
+model facilitates trading between self-serving clusters by introducing an
+incentive in a trade. Traders evaluate the cost and profit of participating in
+a trade and this cost-benefit analysis motivates resource sharing.
 
-The trader is responsible for keeping the cluster's state in conformity with a
+The trader is responsible for keeping the cluster's state in alignment with a
 desired state. As shown in the figure, the trader establishes a cluster state
 stream with the scheduler, continously receiving up-to-date cluster
 information. This information includes the overall cluster utilization, average
-job completion time, and current cost of resources. This stream allows the
-trader to monitor and make trading decisions based on the current state of the
-cluster. The desired state is declared through a set of rules, which are
-configurations dynamically passed to the trader shown below:  
+job completion time, and current resource costs. This stream enables the trader
+to monitor and make trading decisions based on the current state of the
+cluster. The desired state is declared through a set of dynamically
+configured rules passed to the trader.
 
 \begin{figure}[H]
   \begin{lstlisting}[language=go]
@@ -144,11 +143,11 @@ configurations dynamically passed to the trader shown below:
 \end{figure}
 
 The rule's condition represents the desired state of a measurement sent by the
-scheduler to the trader, like utilization below 80\%. The rule implements a
-Broken method which allows the trader to run an action when the actual cluster
-state differs from the desired state. As the trader continously monitors the
-cluster state, it runs the broken methods of all rules to check whether any is
-broken.
+scheduler to the trader such as maintaining utilization below a certain
+threshold. The rule implements a Broken method, enabling the trader trader to execute 
+an action when the actual cluster state deviates from the desired state. As the
+trader continously monitors the cluster state, it runs the broken methods of
+all rules to determine whether any have been violated.
 
 The following algorithm details what happens when a rule is broken, also marked
 in red in \figref{fig1} 
@@ -175,66 +174,70 @@ in red in \figref{fig1}
 \caption{Outgoing Trading Algorithm}
 \end{figure}
 
-When a rule is broken, the trader's first step is to estimate the resources it
-needs to request from other traders. Requested resources are abstracted as a
-virtual node. A virtual node includes the needed resources, time, and other
-constraints like hardware or OS needed for the jobs to run. Virtual nodes 
-translate to the total resources acquired in the external cluster, not into a
-physical node. 
+A virtual node is an abstraction that encapsulates the resources requested from
+an external cluster. It encompasses the needed resources, time, and any
+additional constraints such as specific hardware or operating system
+requirements for job execution. This abstraction represents the total resources
+needed by the trader, and can be mapped onto multiple nodes within the external
+cluster, collectively fulfilling the resource requirements of the virtual node.
 
 % The trader specifies the smallest partition it accepts in the
 % contract, usually the size of the smallest job it has in the jobs list.
 
-The resource estimate is calculuated by first requesting the last level jobs
-from the scheduler, resembling the jobs that would already be scheduled further
-away from their data. The rule's action variable specifies how to estimate the
-needed resources. There are currently two ways to estimate the resource
-request:
+When a rule is broken, the trader's initial task is to estimate the size of the
+virtual node. The resource estimate is calculuated by first retreiving the last
+level jobs from the scheduler, comprising of jobs with the highest wait times.
+The rule's action variable specifies the algorithm to be used for the estimation.
+Currently, there are two methods to estimate the resource request:
 
 \begin{enumerate}
 
-  \item \textbf{Efficient Stacking:} A greedy approach that stacks jobs
-    efficiently over time on the requested node. Starts with oldest job in the
-    $level_N$ queue and add one job at a time while minimizing the size of the
-    node until all jobs are included in the estimation or a constraint is
-    reached.
+  \item \textbf{Incremental Job Packing:} This method employs a greedy approach
+    to stack jobs efficiently over time on the requested virtual node. It
+    starts with the oldest job in the $level_N$ queue and incrementally
+    includes one job at a time to the estimation, adjusting the size of the
+    virtual node to accomadate each new job. The goal is to minimize virtual
+    node size while ensuring the highest number of jobs are accounted for
+    before a constraint is reached.
 
-  \item \textbf{Zero Wait:} An approach that starts jobs in queue at the same
-    time. Starts with oldest job and adds one job at a time at $t_0$ until all
-    jobs are included in the estimation or a constraint is reached.
+  \item \textbf{Simultaneous Job Initiation:} This approach estimates the size
+    of the node assuming all jobs will start simultaneouslt when the virtual
+    node is becomes available. It incrementally includes each job at the start
+    time of the virtual node, increasing its size until a constraint is
+    reached. 
 
 \end{enumerate}
 
-Efficient stacking allows the trader to reduce the size of the virtual node
-which in turn reduces the cost of the trade and increases the chances of it
-getting approved, however at a higher computation cost. Zero wait increases the
-possible benefit from a trade at a higher cost per node and lower computation
-cost.  
+Incremental job packing enables the trader to decrease the size of the virtual
+node which in turn reduces the cost of the trade and improves the likelihood of
+approval. However, this approach incurs higher computation cost and may result
+in slower performance gain from the trade. In contrast, simultaneous job
+initiation increases the potential benefit from a trade but comes at a higher
+cost per node and lower computation cost.
 
-Virtual nodes have constraints like a maximum number of cores,
-size of memory, time, or a budget. 
+Virtual node constraints define the limits on resource allocation, and include
+parameters such as the maximum number of cores, amount of memory, and time to
+be requested per node. In case of opportunistic environments the contraints
+also include a budget, imposing a limit on the incentive send per node.
 
 %version more appealing on a lower budget. It would be advantagous to request
 %resources from another trader if it is cheaper than scaling up the cluster
 %size. [Might want to introduce budgeting a bit earlier]
 
-After estimaing the needed resources, the trader calculates the incentive if
-it's participating in an opportunistic model. Incentives are determined by the
-cost of internally scaling up the cluster, if that is possible, the
-severity of the broken rules, and the budget assigned for trading.
+The incentive calculation is influenced by factors including the cost of
+internally scaling up the cluster (if possible), the severity of the broken 
+rules, and the allocated trading budget.
 
-The trader then broadcasts a contract to all participating clusters, and waits
-for replies. After receiving approved contracts, the trader approves either
-approves the first contract it gets, or the best contract if a criterion is
-passed, and then receives the virtual node information from the foreign trader.
-It then sends the virtual node information for the scheduler to start
-scheduling jobs on it.
+The trader then broadcasts a contract proposal to all participating clusters
+and waits for their responses. Upon receiving the approved contracts, the
+trader ranks them based on multiple criterion like cost, proximity, and prior
+trade history. The trader then approves the most advantageous contract,
+requests the access to the virtual node, and subsequently provide the necessary
+information to the scheduler.
 
-There are various ways to rank contracts, like cost and physical proximity. 
-
-The trader is also responsible for accepting or rejecting incoming requests.
-This functionality is outlined in the yellow section in \figref{fig1} and
-detailed in the following algorithm: 
+The trader is also responsible for accepting or rejecting incoming trade
+requests. This functionality is outlined in the yellow section in \figref{fig1}
+and detailed in the following algorithm: 
 
 \begin{figure}[H]
 \begin{algorithm}[H]
@@ -263,11 +266,11 @@ detailed in the following algorithm:
 \end{figure}
 
 After receiving a trade request as a contract from other traders, the trader
-first checks if there's enough resources in the cluster to accommodate the
-trade, then loops over a set of trading policies set by the cluster admin.
-Policies are symmetrical to rules for incoming requestes. They dictate how the
-trader responds to received resource requests. The structure of a policy is
-as follows:
+first verfies if there are sufficient resources in the cluster to fulfill the
+trade. Thereafter, the trader evaluates the request against a series of trading
+policies. These are analogous to the rules governing requests broadcasted. They
+dictate how the trader responds to received resource requests. The structure of
+a policy is outlined as follows:
 
 \begin{figure}[H]
   \begin{lstlisting}[language=go]
@@ -280,14 +283,15 @@ as follows:
   \caption{Custom Policy implements an approveRequest method}
 \end{figure}
 
-Conditions are a set of variables that specify the acceptable threshold cluster
-state should be in order to accept a trade. For each policy, the minimum
-incentive is also specified which can be a function of the conditions,
-decreasing if the cluster is not busy. Lastly, ApproveRequest() is the method
-the trader run to know if it is okay to accept a trade according to this
-policy.
+Conditions are a set of variables that specify the acceptable thresholds
+cluster state should be in inorder to approve a trade. Each policy specifies
+the minimum incentive, which can be a function of the conditions. The
+ApproveRequest() method is then called to determine whether a trade can be accepted per this policy.
 
-If all policies approve the trade, the trader sends the a positive trade responseand waits for the requesting trader to approve the contract. Once the contract is approved, the trader then requests the resources to be reserved from the scheduler, creates the virtual node and sends it to the requesting trader. 
+If the trade meets all policies' criteria, the trader sends a positive trade
+response and waits for the requesting trader to approve the contract. Once the
+contract is approved, the trader requests the resources to be reserved from the
+scheduler, creates the virtual node, and provides it to the requesting trader. 
 
 % add trading request algorithm
 
