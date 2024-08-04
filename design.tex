@@ -294,6 +294,75 @@ response and waits for the requesting trader to approve the contract. Once the
 contract is approved, the trader requests the resources to be reserved from the
 scheduler, creates the virtual node, and provides it to the requesting trader. 
 
+\section{Implementation} 
+%Why simulator
+This section details the implementation of the proposed trading mechanism. We
+have developed a simulator to run and validate the mechanism, allowing for
+extensive testing across various scenarios. The broader scope provided by the
+simulated results enables us to explore a wide range of questions and insights,
+paving the way for building a robust system on an actual cluster. Moreover, the
+simulator results are not tied to a specific container orchestration framework,
+ensuring that conclusions drawn are generic and can serve as a starting point
+for any cluster implementation. In addition to this flexibility and robustness,
+the simulator allows us to scale experiments in a cost effective manner, and
+acts as a testing environment for rules and policies prior to real-world
+deployment.
+
+The simulator is implemented as a set components designed to run
+seperately on multiple machines, detailed next:
+
+\subsection{Cluster}
+
+The package simulates the functioning of a cluster and abstracts the scheduler,
+worker nodes, client, and the virtual node. 
+
+Local functionality like communication between the nodes and the scheduler,
+running the jobs, adding and removing nodes are done within the same binary.
+
+The scheduler communicates with the trader through gRPC [CITE]. It implements a
+gRPC server, continously sending cluster state through a uni-directional stream.
+The state being sent is limited and only includes:
+
+\begin{lstlisting}[language=go]
+type clusterState struct {
+  // Always sent 
+	MemoryUtilization float32
+	CoreUtilization   float32
+	AverageWaitTime   float64
+  // When changed
+    TotalMemory       uint
+	TotalCore         uint
+    ResourceCost      []uint
+}
+\end{lstlisting}
+
+As for the scheduling algorithm, we implement the previously outlined delay
+scheduling with two levels, bumping jobs from $level_0$ to $level_1$ after ten
+seconds.
+
+The virtual node is implemented by simulating a delay in communication as well
+as a deadline. Once a deadline passes, all unfinished jobs running on the
+virtual node are re-added to the jobs queue and the virtual node is removed
+from cluster. On the provider cluster, the resources are accounted for through
+reserving resources enough equal to the total virtual node size and for the
+total duration of the contract. The delay is governed by the latency between
+the clusters calculated during the trading process.
+
+Lastly, the client is responsible for creating and sending jobs to the
+scheduler. Those jobs are either created synthatically or by importing traces.
+Synthatically, job sizes are sourced through a approximation to the normal
+distribution, with the max job size being the size of the largest node in the
+cluster.
+
+\subsection{Trader}
+
+The trader package includes a gRPC client that communicate with the scheduler
+server and a gRPC server and client for bi-directional communication between
+traders.
+
+It allows for setting the rules and policies, as well as a budget for
+incentivized trades.
+
 % add trading request algorithm
 
 %The user defined outgoing policy also dictates any additional constraints the
