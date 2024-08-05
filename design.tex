@@ -363,6 +363,10 @@ traders.
 It allows for setting the rules and policies, as well as a budget for
 incentivized trades.
 
+For atomicity and predictability, a trader is only allowed to participate in
+one trade at a time, with a buffer of 5 seconds between trades. This also
+prevents trader requesting resources from spamming other participating traders. 
+
 % add trading request algorithm
 
 %The user defined outgoing policy also dictates any additional constraints the
