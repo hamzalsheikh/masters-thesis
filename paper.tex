@@ -79,7 +79,10 @@
 \usepackage {tikz}
 \usetikzlibrary {decorations.markings}
 \usepackage {varioref}
-
+\usepackage{enumitem}
+\setlist[enumerate]{topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex}
+\usepackage{caption}
+\usepackage{subcaption}
 %%% ====================================================================
 %%% Support for a subject index:
 
@@ -273,7 +276,7 @@
 \include {introduction}
 \include {related-work}
 \include {design}
-\include {implementation}
+%\include {implementation}
 \include {evaluation}
 \include {conclusion}
 \include {future-work}
