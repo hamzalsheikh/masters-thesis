@@ -5,7 +5,7 @@
 As the adoption of multi-cluster environments accelerates and the
 infrastructure continues to evolve to support more use cases, there is an
 opportunity to develop tools that leverage existing networking solutions to
-optimize inter-cluster interactions in a multi-cluster environment. . Given the
+optimize inter-cluster interactions in a multi-cluster environment. Given the
 broad definition of a multi-cluster environment, we define our specific context
 as one in which clusters are discoverable to one another and implement the
 trading mechanism's API.
@@ -319,7 +319,7 @@ worker nodes, client, and the virtual node.
 Local functionality like communication between the nodes and the scheduler,
 running the jobs, adding and removing nodes are done within the same binary.
 
-The scheduler communicates with the trader through gRPC [CITE]. It implements a
+The scheduler communicates with the trader through gRPC. It implements a
 gRPC server, continously sending cluster state through a uni-directional stream.
 The state being sent is limited and only includes:
 

@@ -15,18 +15,17 @@ on thier specific workloads to determine the strategies that best fits their
 needs.  
 
 All experiments are run on Cloudlab, a scientific infrastructure used by
-academics for systems and cloud research [CITE]. We utilize the following
+academics for systems and cloud research \cite{duplyakin_design_2019}. We utilize the following
 setups to to run the experiments. Each node in the setups simulates one
 cluster, with the cluster, trader, and client running on the same machine. 
-
+% CITE CLOUDLAB NODES
 \begin{enumerate}
 
-  \item \textbf{Setup One:} 3 Cloudlab nodes c6525-100g [CITE] running Linux
+  \item \textbf{Setup One:} 3 Cloudlab nodes c6525-100g running Linux
     Ubuntu 22.04 in the same Utah datacenter. Cluster sizes are equal having 10
     nodes each with 32 cores and 24GBs of memory.
 
-  \item \textbf{Setup Two:} 3 Cloudlab nodes of type m510, c220g1, c8220 [CITE
-    the node configs] running on three distinct datacenters in Utah, Wisconsin,
+  \item \textbf{Setup Two:} 3 Cloudlab nodes of type m510, c220g1, c8220 running on three distinct datacenters in Utah, Wisconsin,
     and Clemson, and have the same cluster sizes as setup one.
 
 \end{enumerate}
@@ -228,16 +227,16 @@ these clusters.
   \centering
   \includegraphics[width=.9\linewidth]{./figures/experiment-three/cooperative.png}
   \caption{cooperative clusters}
-  \label{fig:exp2coop}
+  \label{fig:exp3coop}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=.9\linewidth]{./figures/experiment-three/control.png}
   \caption{control cluster}
-  \label{fig:exp2control}
+  \label{fig:exp3control}
 \end{subfigure}
-\caption{experiment 2, core utilization}
-\label{fig:exp2coreutil}
+\caption{experiment 3, memory utilization}
+\label{fig:exp3memutil}
 \end{figure}
 
 The small cluster did not incur any degradation for loaning its resources, as

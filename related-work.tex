@@ -44,7 +44,9 @@ to each other, with a focus on load balancing between clusters and facilitating
 service discovery in a multi-cluster setting. Our approach takes a different
 route by concealing each cluster's workload and solely exposing resources
 needs. This strategy allows clusters to dynamically expand and contract with
-minimal exposure to the underlying workloads and services \cite{noauthor_fleet_nodate, noauthor_azure_nodate, noauthor_multi-region_nodate}.
+minimal exposure to the underlying workloads and services
+\cite{noauthor_fleet_nodate, noauthor_azure_nodate,
+noauthor_multi-region_nodate}.
 
 In addition to cloud providers' offerings, multiple open source projects offer
 tools for multi-cluster management. Cilium, Istio, and Linkerd are all service
@@ -57,7 +59,9 @@ kubernetes cluster networking \cite{noauthor__nodate, noauthor_skupper_nodate}.
 
 These projects offer the network connectivity for multi-cluster environemnts,
 exposing the services of the clusters to one other, without exposing the
-control layer of these clusters. Our mechanism can be thought off as the application layer on top of the network layer, introducing new sharing patterns between the clusters.
+control layer of these clusters. Our mechanism can be thought off as the
+application layer on top of the network layer, introducing new sharing patterns
+between the clusters.
 
 Sky pilot offers a different perspective to managing multi-cluster
 environments. It is an intercloud broker that was developed to run workloads on

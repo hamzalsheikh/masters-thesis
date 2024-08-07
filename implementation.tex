@@ -1,65 +1,14 @@
 %%% -*-LaTeX-*-
 
-\chapter{Implementation} 
+s
 
-In the previous section, we outlined the theoretical design of the system. This
-section goes over the implementation of the simulator written to evaluate the
-mechanism.
-
-%Why simulator 
-We decided that having a simulator will allow us a broader scope for testing
-the trading mechanism. Although it is possible to build the mechanism on top of
-current multi-cluster networking solutions, we will be limited to the design
-decisions of the tools used. Having a broader simulated results will open the
-door for more interesting questions and answers leading to a concrete system
-being built on an actual cluster.
-
-The simulator is implemented as a set of seperate Go packages that can be run
-in a distributed fashion.
-\begin{enumerate}
-  \item Trader: main module responsible for the functionality of the mechanism
-  \item Scheduler: responsible for scheduling jobs on the cluster,
-    communicating cluster state with the trader, providing/receiving virtual
-    nodes 
-  \item Client: Imports production traces or creates synthetic workloads and
-    sends it to the schedueler.
-\end{enumerate}
-
-The simulator also includes other bookkeeping components like a service package
-and a registry that don't interfere much with the evaluation and won't be
-further discussed.
 
 The client communicates with the scheduler through http, whereas as the
 scheduler-trader and trader-trader communication is through grpc. 
 
 \section{Scheduler} 
-
-This section only discusses design decisioins and additions made relating to
-the mechanism. These components are on top of regular scheduling functionality. 
-
-The main aspect to be discussed in the scheduler is the scheduling algorithm
-itself. It is a two level delay scheduling algorithm. A job is first added to
-level 0 queue, and sent to level 1 queue if not scheduled in X time. Level 1
-jobs are more likely to be scheduled away from their data, hence these are the
-ones that will be sent to the trader when estimating the size of the node to
-send. A distinctive difference to the delay scheduling algorithm is that the
-nodes do not request jobs to be scheduled on them, but instead the scheduling
-algorithm looks for nodes to schedule the jobs, similar to widely used cluster
-schedulers.
-
-A node burst scheduling is also implemented in the scheduler. Once a virtual
-node is added to the cluster, the cluster tries to schedule as much viable jobs
-it can on it right away to increase utilization of the virtual node, since the
-node have a deadline. 
-
-The scheduler also implements a gRPC server responsible for sending the
-required cluster state to the trader.
-
 \section{Trader}
 
-The trader receives the cluster state from the scheduler through a continious
-loop as a gRPC client. The trader then runs a state monitor, cycling through
-the outgoing policies to check whether any is broken.   
 
 \subsection{Trading algorithm}
 
@@ -74,10 +23,6 @@ contract, and adds the received virtual node to the local cluster.
 \lstinputlisting[language=go, firstline=94,
 lastline=96]{../multi-cluster-simulator/pkg/trader/trader.go}
 
-The outgoing policies are implemented as an interface with a Broken method
-signature. This allows the policies to be pluggablle. The user can define the
-policy as long as there's a notion that the policy can break depending on the
-cluster changes.
 
 We currently implement two Policies:
 \begin{enumerate}
