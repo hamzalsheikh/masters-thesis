@@ -50,7 +50,7 @@ noauthor_multi-region_nodate}.
 
 In addition to cloud providers' offerings, multiple open source projects offer
 tools for multi-cluster management. Cilium, Istio, and Linkerd are all service
-meshes that offers multi-cluster connectivity. Those service meshes expose
+meshes that offer multi-cluster connectivity. These service meshes expose
 gateways between clusters for communication, allowing services to communicate
 through the clusters in the environment \cite{noauthor_cluster_nodate,
 noauthor_multi-cluster_nodate-2, noauthor_install_nodate}. Submariner and
@@ -59,11 +59,11 @@ kubernetes cluster networking \cite{noauthor__nodate, noauthor_skupper_nodate}.
 
 These projects offer the network connectivity for multi-cluster environemnts,
 exposing the services of the clusters to one other, without exposing the
-control layer of these clusters. Our mechanism can be thought off as the
+control layer of these clusters. Our mechanism can be thought of as the
 application layer on top of the network layer, introducing new sharing patterns
 between the clusters.
 
-Sky pilot offers a different perspective to managing multi-cluster
+Sky pilot offers a different perspective on managing multi-cluster
 environments. It is an intercloud broker that was developed to run workloads on
 different cloud providers to reduce costs and prevent provider lockup. Their
 approach removes the need for cluster connectivity, relying on the
@@ -73,10 +73,10 @@ cluster to make its own clustering decisions \cite{yang_skypilot_nodate}.
 Lastly, Liqo is a kubernetes multi-cluster project that enables workload
 offloading between clusters. It utilizes a peer-to-peer connection between
 clusters and offers a static policy for allowing clusters to offload their
-workloads on external clusters. Their focus is to create a continium of
+workloads on external clusters. Their focus is to create a continuum of
 resources across multiple clusters, exposing resources to one another. Our
-mechanism have a very similar goal but uses trading as the basis of creating a
-dynamic continium of resources when needed \cite{iorio_computing_2023,
+mechanism has a very similar goal but uses trading as the basis of creating a
+dynamic continuum of resources when needed \cite{iorio_computing_2023,
 noauthor_liqo_nodate}. 
 
 In the next section, we introduce our mechanism and show how it fits in the

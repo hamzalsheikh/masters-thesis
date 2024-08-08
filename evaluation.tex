@@ -11,13 +11,14 @@ However, the possible combinations of rules, policies and their respective
 configurations is infinite. Our aim in this section is not to exhaust all
 possibilities, but to explore the validity of the mechanism under different
 constraints. This approach paves the way for users to conduct their experiments
-on thier specific workloads to determine the strategies that best fits their
+on thier specific workloads to determine the strategy that best fits their
 needs.  
 
 All experiments are run on Cloudlab, a scientific infrastructure used by
-academics for systems and cloud research \cite{duplyakin_design_2019}. We utilize the following
-setups to to run the experiments. Each node in the setups simulates one
-cluster, with the cluster, trader, and client running on the same machine. 
+academics for systems and cloud research \cite{duplyakin_design_2019}. We
+utilize the following setups to to run the experiments. Each node in the setups
+simulates one cluster, with the cluster, trader, and client running on the same
+machine. 
 % CITE CLOUDLAB NODES
 \begin{enumerate}
 
@@ -25,20 +26,21 @@ cluster, with the cluster, trader, and client running on the same machine.
     Ubuntu 22.04 in the same Utah datacenter. Cluster sizes are equal having 10
     nodes each with 32 cores and 24GBs of memory.
 
-  \item \textbf{Setup Two:} 3 Cloudlab nodes of type m510, c220g1, c8220 running on three distinct datacenters in Utah, Wisconsin,
-    and Clemson, and have the same cluster sizes as setup one.
+  \item \textbf{Setup Two:} 3 Cloudlab nodes of type m510, c220g1, c8220
+    running on three distinct datacenters in Utah, Wisconsin, and Clemson, and
+    have the same cluster sizes as those in Setup One.
 
 \end{enumerate}
 
 The setups simulate different scenarios where clusters can belong to one
-organization, different organizations, and have varying network latency and
+organization or different organizations, and have varying network latency and
 bandwidth.  
 
 We derive our results by running a configuration of rules, policies, and
 workloads twice, once with and once without the mechanism and compare the
 performance difference.
 
-Our methodology for running workloads is as follows, all participating clusters
+Our methodology for running workloads is as follows: All participating clusters
 have the same start and end time for receiving jobs from their respective
 clients. After the clients stop sending jobs, the experiment is kept on until
 the last job in the slowest cluster finish execution. 
@@ -54,7 +56,7 @@ the last job in the slowest cluster finish execution.
   
       \item \textbf{Setup:} \#1 with three cooperative clusters.
   
-      \item \textbf{Workload:} Synthetic, all clusters are over-subscribed.
+      \item \textbf{Workload:} Synthetic, all clusters are oversubscribed.
       
       \item \textbf{Rules:} Approve trades if average wait time is below 5
         seconds and both memory and core utilization below 0.8
@@ -85,7 +87,7 @@ resource utilization for the entirety of the experiment duration.
   \caption{control cluster}
   \label{fig:exp1control}
 \end{subfigure}
-\caption{experiment 1, memory utilization}
+\caption{Experiment 1, memory utilization}
 \label{fig:exp1memutil}
 \end{figure}
 
@@ -93,16 +95,16 @@ Figure~\ref{fig:exp1memutil} presents the memory utilization of the cooperative
 clusters in \ref{fig:exp1coop} and the same workload run on a cluster without
 trading in \ref{fig:exp1control}.
 % analysis
-We can see that the control cluster have a slightly less utilization averaging
-at 70\% whereas cooperative cluster's memory utilization averaged at 75\%. This
+We can see that the control cluster have a slightly lower utilization averaging
+at 70\% whereas cooperative clusters' memory utilization averaged at 75\%. This
 5\% difference is due to cooperative clusters doing quick trades during short
-down time intervals, leading to an inefficient scheduling and coupled with
+downtime intervals, leading to an inefficient scheduling and coupled with
 higher utilization. In this case, trading is discouraged or a higher buffer
-between trades would benefit performance. We can draw the same conclusion for
-core utilization with 65\% and 71\%. However, this led to a 5.45\% increase in
-total time to finish all jobs as local resources where occationally lent just
-before a spike in jobs, delaying the execution of the local ones. As this
-phenomenon happened on all clusters, they all suffered decreased perforamnce.
+between trades is preferred. We can draw the same conclusion for the difference
+in core utilization with 65\% and 71\%. However, this led to a 5.45\% increase
+in total time to finish all jobs as local resources were occationally lent
+just before a spike in jobs, delaying the execution of the local ones. As this
+phenomenon happened on all clusters, they all suffered decreased performance.
 It's important to mention that a cluster can't evict external allocations once
 the contract is approved, hence a trade can be expensive without proper
 considerations.
@@ -115,13 +117,13 @@ We can see this effect play out in the number of jobs in the scheduler's queues.
   \caption{}\label{fig:exp-1-jobs-in-queue}
 \end{figure}
 
-As you can see in figure~\ref{fig:exp-1-jobs-in-queue}, all participating
+As seen in figure~\ref{fig:exp-1-jobs-in-queue}, all participating
 clusters incurred an increased number of jobs in the queue at the peak. Note
 that the peak is created because of our workload methodology. The decreasing
 part of the graph resembles the cool down time, or the time it takes to finish
-scheduling all jobs after the client finish sending them. As all these clusters
-are over subscribed, jobs keep on getting queued until the client finish
-sending jobs. The total workload per cluster in this experiment was around 8000
+scheduling all jobs after the client is done sending them. As all these clusters
+are oversubscribed; jobs keep getting queued until the client is done 
+sending. The total workload per cluster in this experiment was around 8000
 jobs. 
 
 \section{Experiment Two}
@@ -138,9 +140,9 @@ jobs.
       \item \textbf{Workload:} Synthetic 
         \vspace{-.5em}
           \begin{enumerate}
-            \item One under utilized. 
+            \item One underutilized. 
             \item One highly utilized. 
-            \item One overly subscribed. 
+            \item One oversubscribed. 
           \end{enumerate} 
       
       \item \textbf{Rules:} Approve trades if average wait time is below 5
@@ -153,8 +155,8 @@ jobs.
   }}
 \end{center}
 
-In this experiment, we run trading on a simlar rule and policy configuration as
-experiment one, with varying workloads between clusters, detailed in the
+In this experiment, we run trading on a similar rule and policy configuration
+as experiment one but with varying workloads between clusters, detailed in the
 configuration box above. 
 
 \begin{figure}[H]
@@ -171,7 +173,7 @@ configuration box above.
   \caption{control cluster}
   \label{fig:exp2control}
 \end{subfigure}
-\caption{experiment 2, core utilization}
+\caption{Experiment 2, core utilization}
 \label{fig:exp2coreutil}
 \end{figure}
 
@@ -180,10 +182,10 @@ clusters in \ref{fig:exp2coop} and the same workload run on a cluster without
 trading in \ref{fig:exp2control}.
 % analysis
 The first evident difference between the two graphs is the spikes seen on the
-10 jobs/minute cluster and less apperent the 50 jobs/minute cluster. These
-indicate the occurance of trades, benefiting the highly utilized 100
-jobs/minute cluster. Trading did not negatively effect the performance of any
-of the particpating cluster, and decreased the total time to finish all jobs in
+underutilized cluster and less apparent on the highly utilized. These
+indicate the occurence of trades, benefiting the highly utilized 100
+jobs/minute cluster. Trading did not negatively affect the performance of any
+of the particpating clusters, and it decreased the total time to finish all jobs in
 the environment by 5.8\%, from 7 hours and 28 minutes to 7 hours.
 
 \section{Experiment Three}
@@ -214,7 +216,7 @@ the environment by 5.8\%, from 7 hours and 28 minutes to 7 hours.
 \end{center}
 
 This experiment models a scenario with some similarity to the machine learning
-training-inference workloads the Lyra system took advantage of
+training-inference workloads the Lyra system takes advantage of
 \cite{li_lyra_2023}, albeit with some differences. There are two big highly
 utilized clusters, and one small cluster experiencing low utilization in
 addition to spikes. We kept the rules and policies similar to the previous
@@ -235,7 +237,7 @@ these clusters.
   \caption{control cluster}
   \label{fig:exp3control}
 \end{subfigure}
-\caption{experiment 3, memory utilization}
+\caption{Experiment 3, memory utilization}
 \label{fig:exp3memutil}
 \end{figure}
 
