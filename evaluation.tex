@@ -77,13 +77,13 @@ resource utilization for the entirety of the experiment duration.
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-one/cooperative-clusters-all-at-100-trading-mem-util.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-one/exp-one.png}
   \caption{cooperative clusters}
   \label{fig:exp1coop}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-one/control-mem-util.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-one/exp-one-control.png}
   \caption{control cluster}
   \label{fig:exp1control}
 \end{subfigure}
@@ -163,13 +163,13 @@ configuration box above.
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-two/trading.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-two/exp-two-coop.png}
   \caption{cooperative clusters}
   \label{fig:exp2coop}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-two/control.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-two/exp-two-control.png}
   \caption{control cluster}
   \label{fig:exp2control}
 \end{subfigure}
@@ -227,13 +227,13 @@ these clusters.
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-three/cooperative.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-three/exp-three-coop.png}
   \caption{cooperative clusters}
   \label{fig:exp3coop}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=.9\linewidth]{./figures/experiment-three/control.png}
+  \includegraphics[width=.9\linewidth]{./figures/experiment-three/exp-three-control.png}
   \caption{control cluster}
   \label{fig:exp3control}
 \end{subfigure}
@@ -248,6 +248,162 @@ experiment, with the small cluster experiencing only 15\% increase in
 utilization. This led to a  4\% reduction in time to schedule all jobs in the
 highly utilized clusters. 
 
+
+\section{Experiment Four}
+
+\begin{center}
+  \fbox{\parbox{14cm}{
+  
+    \underline{Configuration:}
+    \vspace{.3em}
+    \begin{enumerate}
+  
+      \item \textbf{Setup:} \#1 with two opportunistic clusters.
+
+      \item \textbf{Workload:} Synthetic
+          \vspace{-.5em}
+          \begin{enumerate}
+            \item One highly utilized cluster
+            \item One underutilized cluster
+          \end{enumerate} 
+      \item \textbf{Rules:} Approve trades if average wait time is below 5
+        seconds and both memory and core utilization below 0.8 AND incentive 
+        provided is higher than current cost of operation.
+      
+      \item \textbf{Policies:} Initiate trades if utilization is above 0.8 or
+        average wait time above 5 seconds AND there's a budget for a trade.
+  
+    \end{enumerate}
+  }}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-four/exp4-incentives-2.png}
+  \caption{opportunistic clusters}
+  \label{fig:exp4oop}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-four/exp4-incentives-control-2.png}
+  \caption{control clusters}
+  \label{fig:exp4control}
+\end{subfigure}
+\caption{Experiment 4, memory utilization}
+\label{fig:exp4memutil}
+\end{figure}
+
+\section{Experiment Five}
+
+\begin{center}
+  \fbox{\parbox{14cm}{
+  
+    \underline{Configuration:}
+    \vspace{.3em}
+    \begin{enumerate}
+  
+      \item \textbf{Setup:} \#2 with two cooperative clusters.
+
+      \item \textbf{Workload:} Production
+          \vspace{-.5em}
+          \begin{enumerate}
+            \item 12 hours period of a 1.3k machine cluster recorded in 2017
+            \item 12 hours period of a 4k machine cluster recorded in 2018
+          \end{enumerate} 
+      \item \textbf{Rules:} Approve trades if average wait time is below 5
+        seconds and both memory and core utilization below 0.8.
+      
+      \item \textbf{Policies:} Initiate trades if utilization is above 0.8 or
+        average wait time above 5 seconds.
+  
+    \end{enumerate}
+  }}
+\end{center}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-five/alibaba-mem-coop.png}
+  \caption{cooperative clusters memory utilization}
+  \label{fig:exp5coopmem}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-five/alibaba-mem-control.png}
+  \caption{control clusters memory utilization}
+  \label{fig:exp5controlmem}
+\end{subfigure}
+\caption{Experiment 5, memory utilization}
+\label{fig:exp5memutil}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-five/alibaba-core-coop.png}
+  \caption{cooperative clusters core utilization}
+  \label{fig:exp5coopcore}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-five/alibaba-core-control.png}
+  \caption{control clusters core utilization}
+  \label{fig:exp5controlcore}
+\end{subfigure}
+\caption{Experiment 5, core utilization}
+\label{fig:exp5coreutil}
+\end{figure}
+
+\section{Experiment Six}
+
+\begin{center}
+  \fbox{\parbox{14cm}{
+  
+    \underline{Configuration:}
+    \vspace{.3em}
+    \begin{enumerate}
+  
+      \item \textbf{Setup:} \#1 with two cooperative clusters.
+
+      \item \textbf{Workload:} Synthetic 
+          \vspace{-.5em}
+          \begin{enumerate}
+            \item One highly utilized cluster
+            \item One diurnally-utilized cluster
+          \end{enumerate} 
+      \item \textbf{Rules:} Approve trades if average wait time is below 5
+        seconds and both memory and core utilization below 0.8.
+      
+      \item \textbf{Policies:} Initiate trades if utilization is above 0.8 or
+        average wait time above 5 seconds.
+  
+    \end{enumerate}
+  }}
+\end{center}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-six/trading.png}
+  \caption{cooperative clusters core utilization}
+  \label{fig:exp6coop}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{./figures/experiment-six/control.png}
+  \caption{control clusters core utilization}
+  \label{fig:exp6control}
+\end{subfigure}
+\caption{Experiment 6, core utilization}
+\label{fig:exp6coreutil}
+\end{figure}
 
 %\section{Experiment Four}
 
