@@ -23,13 +23,10 @@ machine.
 \begin{enumerate}
 
   \item \textbf{Setup One:} 3 Cloudlab nodes c6525-100g running Linux
-    Ubuntu 22.04 in the same Utah datacenter. Cluster sizes are equal having 10
-    nodes each with 32 cores and 24GBs of memory.
+    Ubuntu 22.04 in the same Utah datacenter.
 
   \item \textbf{Setup Two:} 3 Cloudlab nodes of type m510, c220g1, c8220
-    running on three distinct datacenters in Utah, Wisconsin, and Clemson, and
-    have the same cluster sizes as those in Setup One.
-
+    running on three distinct datacenters in Utah, Wisconsin, and Clemson.
 \end{enumerate}
 
 The setups simulate different scenarios where clusters can belong to one
@@ -277,6 +274,14 @@ highly utilized clusters.
   }}
 \end{center}
 
+In this experiment, we study the effects of having two opportunistic clusters
+in the system. We assume that both clusters' cost for resource is the same,
+which is the price of Microsoft Azure's general purpose instance
+\cite{azure_pricing}. This price would be the maximum any cluster would pay for
+a resource, as an alternate is clearly available. The cluster's value of a
+resource varies in relation to, and is directly proportional, to its
+utilization.
+
 \begin{figure}[H]
 \centering
 \begin{subfigure}{.5\textwidth}
@@ -295,6 +300,12 @@ highly utilized clusters.
 \label{fig:exp4memutil}
 \end{figure}
 
+As the figure 4.5(a) shows, the underutilized cluster experienced spikes in
+utilization caused by successful trades, which led to a 12\% increase in
+utilization. The trades also reduced the cluster's cost by 3\%. The highly
+utilized cluster witnessed an 8\% reduction in total job completion time (TJCT)
+while also reducing the cost by 3\%.
+
 \section{Experiment Five}
 
 \begin{center}
@@ -309,8 +320,8 @@ highly utilized clusters.
       \item \textbf{Workload:} Production
           \vspace{-.5em}
           \begin{enumerate}
-            \item 12 hours period of a 1.3k machine cluster recorded in 2017
-            \item 12 hours period of a 4k machine cluster recorded in 2018
+            \item small: 1.3k machine cluster
+            \item large: 4k machine cluster
           \end{enumerate} 
       \item \textbf{Rules:} Approve trades if average wait time is below 5
         seconds and both memory and core utilization below 0.8.
@@ -322,6 +333,15 @@ highly utilized clusters.
   }}
 \end{center}
 
+This experiment studies the effects of introducing cooperative trading to two
+Alibaba clusters. Both clusters run both long running applications and short
+spanned jobs. The small cluster trace was recorded in 2017 while the large
+cluster trace was recorded in 2018. Although large cluster trace spans for 8
+days, we're bound by the small cluster's period of 12 hours, so a random 12
+hour period was picked from the large cluster with the same starting time. 
+
+The following figures represent the reported core and memory utilization from
+the experiment.
 
 \begin{figure}[H]
 \centering
@@ -341,6 +361,12 @@ highly utilized clusters.
 \label{fig:exp5memutil}
 \end{figure}
 
+The memory utilization of the small cluster was nearing 100\% for the entirety
+of the experiment, whereas the large cluster didn't go above 40\%. We can't see
+much of a difference between the two graphs meaning that just a small amount of
+tradering was accomplished. This is due to the core utilization, explained
+below.
+
 \begin{figure}[H]
 \centering
 \begin{subfigure}{.5\textwidth}
@@ -359,6 +385,12 @@ highly utilized clusters.
 \label{fig:exp5coreutil}
 \end{figure}
 
+We can see that the core utilization in the small cluster was at 90\% for all
+the experiment duration. On the other hand, the large cluster was fully
+utilized up until the very end. Trading only occurred during this duration, and
+led to a 2\% increase in the large cluster's utilization and a 1\% reduction in
+the TJCT.
+
 \section{Experiment Six}
 
 \begin{center}
@@ -373,7 +405,7 @@ highly utilized clusters.
       \item \textbf{Workload:} Synthetic 
           \vspace{-.5em}
           \begin{enumerate}
-            \item One highly utilized cluster
+            \item One over-utilized cluster
             \item One diurnally-utilized cluster
           \end{enumerate} 
       \item \textbf{Rules:} Approve trades if average wait time is below 5
@@ -386,6 +418,12 @@ highly utilized clusters.
   }}
 \end{center}
 
+In this experiment, we replicate the setup present in the Lyra system
+\cite{li_lyra_2023}, with the difference being that lending clusters are
+restricted from evicting jobs already scheduled on their nodes. The training
+cluster is over-subscribed to present the elastic nature of training workloads,
+whereas the inference cluster follows a diurnal pattern resembling the clients'
+inference usage. Both clusters are simulated with an equal size of 100 nodes.  
 
 \begin{figure}[H]
 \centering
@@ -405,14 +443,12 @@ highly utilized clusters.
 \label{fig:exp6coreutil}
 \end{figure}
 
-%\section{Experiment Four}
+As illustrated in figure \ref{fig:exp6coop}, the inference cluster's resources
+during downtime was efficiently utilized through trading compared to the
+control scenario depicted in figure \ref{fig:exp6control}. This led to a six
+fold increase in resource utilization in the inference cluster without
+negatively impacting the traininig cluster. The optimized resource usage
+contributed to 34\% increase in (TJCT). We can also notice that the graph in
+the highly utilized section of the diurnal pattern in \ref{fig:exp6coop} shows
+more variability than \ref{fig:exp6coop} due to the restrictions on eviction.
 
-% the goal is to test different policies and see which ones, coupled with the
-% appropriate workload, achieves one of the goals stated in the thesis
-% statement.
-%\section{Limitations}
-%
-%- workload overfitting
-%https://www.usenix.org/system/files/conference/atc18/atc18-amvrosiadis.pdf
-%
-%- simulation not actual system
