@@ -43,7 +43,7 @@ clients. After the clients stop sending jobs, the experiment is kept on until
 the last job in the slowest cluster finish execution. 
 
 \section{Experiment One}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -84,13 +84,13 @@ resource utilization for the entirety of the experiment duration.
   \caption{control cluster}
   \label{fig:exp1control}
 \end{subfigure}
-\caption{Experiment 1, memory utilization}
+\caption{Experiment 1, memory utilization.}
 \label{fig:exp1memutil}
 \end{figure}
 
 Figure~\ref{fig:exp1memutil} presents the memory utilization of the cooperative
-clusters in \ref{fig:exp1coop} and the same workload run on a cluster without
-trading in \ref{fig:exp1control}.
+clusters in Figure~\ref{fig:exp1coop} and the same workload run on a cluster without
+trading in Figure~\ref{fig:exp1control}.
 % analysis
 We can see that the control cluster have a slightly lower utilization averaging
 at 70\% whereas cooperative clusters' memory utilization averaged at 75\%. This
@@ -111,10 +111,11 @@ We can see this effect play out in the number of jobs in the scheduler's queues.
   \begin{center}
     \includegraphics[width=0.5\textwidth]{./figures/experiment-one/jobs-in-queue.png}
   \end{center}
-  \caption{}\label{fig:exp-1-jobs-in-queue}
+  \caption{Jobs in queue.}
+  \label{fig:exp-1-jobs-in-queue}
 \end{figure}
 
-As seen in figure~\ref{fig:exp-1-jobs-in-queue}, all participating
+As seen in Figure~\ref{fig:exp-1-jobs-in-queue}, all participating
 clusters incurred an increased number of jobs in the queue at the peak. Note
 that the peak is created because of our workload methodology. The decreasing
 part of the graph resembles the cool down time, or the time it takes to finish
@@ -124,7 +125,7 @@ sending. The total workload per cluster in this experiment was around 8000
 jobs. 
 
 \section{Experiment Two}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -170,13 +171,13 @@ configuration box above.
   \caption{control cluster}
   \label{fig:exp2control}
 \end{subfigure}
-\caption{Experiment 2, core utilization}
+\caption{Experiment 2, core utilization.}
 \label{fig:exp2coreutil}
 \end{figure}
 
 Figure~\ref{fig:exp2coreutil} displays the core utilization of the cooperative
-clusters in \ref{fig:exp2coop} and the same workload run on a cluster without
-trading in \ref{fig:exp2control}.
+clusters in Figure~\ref{fig:exp2coop} and the same workload run on a cluster without
+trading in Figure~\ref{fig:exp2control}.
 % analysis
 The first evident difference between the two graphs is the spikes seen on the
 underutilized cluster and less apparent on the highly utilized. These
@@ -186,7 +187,7 @@ of the particpating clusters, and it decreased the total time to finish all jobs
 the environment by 5.8\%, from 7 hours and 28 minutes to 7 hours.
 
 \section{Experiment Three}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -217,7 +218,7 @@ training-inference workloads the Lyra system takes advantage of
 \cite{li_lyra_2023}, albeit with some differences. There are two big highly
 utilized clusters, and one small cluster experiencing low utilization in
 addition to spikes. We kept the rules and policies similar to the previous
-experiments for reference. The figure below shows the memory utilization of
+experiments for reference. Figure~\ref{fig:exp3memutil} shows the memory utilization of
 these clusters. 
 
 \begin{figure}[H]
@@ -234,20 +235,19 @@ these clusters.
   \caption{control cluster}
   \label{fig:exp3control}
 \end{subfigure}
-\caption{Experiment 3, memory utilization}
+\caption{Experiment 3, memory utilization.}
 \label{fig:exp3memutil}
 \end{figure}
 
 The small cluster did not incur any degradation for loaning its resources, as
-job completion time and total time to finish all jobs remained the same. The
-highly utilized clusters were able to manage their workloads for most of the
+job completion time and total time to finish all jobs remained the same as shown
+in Figure~\ref{fig:exp3memutil}. The highly utilized clusters were able to manage their workloads for most of the
 experiment, with the small cluster experiencing only 15\% increase in
 utilization. This led to a  4\% reduction in time to schedule all jobs in the
 highly utilized clusters. 
 
-
 \section{Experiment Four}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -296,18 +296,18 @@ utilization.
   \caption{control clusters}
   \label{fig:exp4control}
 \end{subfigure}
-\caption{Experiment 4, memory utilization}
+\caption{Experiment 4, memory utilization.}
 \label{fig:exp4memutil}
 \end{figure}
 
-As the figure 4.5(a) shows, the underutilized cluster experienced spikes in
+As the Figure~\ref{fig:exp4oop} shows, the underutilized cluster experienced spikes in
 utilization caused by successful trades, which led to a 12\% increase in
 utilization. The trades also reduced the cluster's cost by 3\%. The highly
 utilized cluster witnessed an 8\% reduction in total job completion time (TJCT)
 while also reducing the cost by 3\%.
 
 \section{Experiment Five}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -340,7 +340,7 @@ cluster trace was recorded in 2018. Although large cluster trace spans for 8
 days, we're bound by the small cluster's period of 12 hours, so a random 12
 hour period was picked from the large cluster with the same starting time. 
 
-The following figures represent the reported core and memory utilization from
+Figures \ref{fig:exp5memutil} and \ref{fig:exp5coreutil} represent the reported core and memory utilization from
 the experiment.
 
 \begin{figure}[H]
@@ -357,7 +357,7 @@ the experiment.
   \caption{control clusters memory utilization}
   \label{fig:exp5controlmem}
 \end{subfigure}
-\caption{Experiment 5, memory utilization}
+\caption{Experiment 5, memory utilization.}
 \label{fig:exp5memutil}
 \end{figure}
 
@@ -381,7 +381,7 @@ below.
   \caption{control clusters core utilization}
   \label{fig:exp5controlcore}
 \end{subfigure}
-\caption{Experiment 5, core utilization}
+\caption{Experiment 5, core utilization.}
 \label{fig:exp5coreutil}
 \end{figure}
 
@@ -392,7 +392,7 @@ led to a 2\% increase in the large cluster's utilization and a 1\% reduction in
 the TJCT.
 
 \section{Experiment Six}
-
+\vspace{2em}
 \begin{center}
   \fbox{\parbox{14cm}{
   
@@ -439,16 +439,15 @@ inference usage. Both clusters are simulated with an equal size of 100 nodes.
   \caption{control clusters core utilization}
   \label{fig:exp6control}
 \end{subfigure}
-\caption{Experiment 6, core utilization}
+\caption{Experiment 6, core utilization.}
 \label{fig:exp6coreutil}
 \end{figure}
 
-As illustrated in figure \ref{fig:exp6coop}, the inference cluster's resources
+As illustrated in Figure~\ref{fig:exp6coop}, the inference cluster's resources
 during downtime was efficiently utilized through trading compared to the
-control scenario depicted in figure \ref{fig:exp6control}. This led to a six
+control scenario depicted in Figure~\ref{fig:exp6control}. This led to a six
 fold increase in resource utilization in the inference cluster without
 negatively impacting the traininig cluster. The optimized resource usage
 contributed to 34\% increase in (TJCT). We can also notice that the graph in
-the highly utilized section of the diurnal pattern in \ref{fig:exp6coop} shows
-more variability than \ref{fig:exp6coop} due to the restrictions on eviction.
-
+the highly utilized` section of the diurnal pattern in Figure~\ref{fig:exp6coop} shows
+more variability than Figure~\ref{fig:exp6coop} due to the restrictions on eviction.

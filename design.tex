@@ -17,12 +17,12 @@ clusters.
 
 In this chapter we present the system design, discuss the role of the scheduler
 in the mechanism, explain what user-defined policies and rules are, and
-describe the design of the trader. The following figure illustrates the
-mechanism's design and will be elaborated on in the subsequent sections: 
+describe the design of the trader. Figure \ref{fig:fig1} illustrates the
+mechanism's design and will be elaborated on in the subsequent sections.
 
 \begin{figure}[H]
   \centerline{\includegraphics[scale=0.45]{figures/system-diagram}}
-  \caption{System architecture showing the various compononents of the trader,
+  \caption[System architecture]{System architecture showing the various compononents of the trader,
     and how it connects to a cluster. Red section represents the procedure
     requesting resources and the yellow section depicts the procedure of
     providing resources to external clusters. Squares represent the nodes in
@@ -81,7 +81,7 @@ environment. These jobs would also incur the least percentage reduction in
 performance when scheduled on an external cluster compared to being run
 locally.
 
-\figref{fig1} illustrates the architecture of the scheduler described here. The
+Figure \ref{fig:fig1} illustrates the architecture of the scheduler described here. The
 different queues represent different levels a job can be in. Colored squares
 represent nodes running external jobs and the grey ones represent nodes running
 local jobs. The incoming and outgoing arrows represents the exposed interface
@@ -124,15 +124,15 @@ participating in a trade and this cost-benefit analysis motivates resource
 sharing.
 
 The trader is responsible for keeping the cluster's state in alignment with a
-desired state. As shown in the figure, the trader establishes a cluster state
-stream with the scheduler, continously receiving up-to-date cluster
+desired state. As shown in figure \ref{fig:fig1}, the trader establishes a cluster state
+stream with the scheduler, continuously receiving up-to-date cluster
 information. This information includes the overall cluster utilization, average
 job completion time, and current resource costs. This stream enables the trader
 to monitor and make trading decisions based on the current state of the
 cluster. The desired state is declared through a set of dynamically
 configured rules passed to the trader.
 
-\begin{figure}[H]
+\begin{figure}[t]
   \begin{lstlisting}[language=go]
     type Rule struct {
       Condition: // desired state to maintain
@@ -140,7 +140,7 @@ configured rules passed to the trader.
       Broken(cluster state, condition) bool
     } 
   \end{lstlisting}
-  \caption{Rules Definition}
+  \caption{Rules definition.}
 \end{figure}
 
 The rule's condition represents the desired state of a measurement sent by the
@@ -151,7 +151,7 @@ trader continously monitors the cluster state, it runs the \lstinline{Broken()} 
 all rules to determine whether any have been violated.
 
 The following algorithm details what happens when a rule is broken, also marked
-in red in \figref{fig1} 
+in red in \ref{fig:fig1}.
 
 \begin{figure}[H]
 \begin{algorithm}[H]
@@ -172,7 +172,8 @@ in red in \figref{fig1}
   \EndProcedure
 \end{algorithmic}
 \end{algorithm}
-\caption{Outgoing Trading Algorithm}
+\caption{Outgoing trading algorithm.}
+\label{outgoing}
 \end{figure}
 
 A virtual node is an abstraction that encapsulates the resources requested from
@@ -185,7 +186,7 @@ cluster, collectively fulfilling the resource requirements of the virtual node.
 % The trader specifies the smallest partition it accepts in the
 % contract, usually the size of the smallest job it has in the jobs list.
 
-When a rule is broken, the trader's initial task is to estimate the size of the
+As expressed in figure \ref{outgoing}, when a rule is broken, the trader's initial task is to estimate the size of the
 virtual node. The resource estimate is calculuated by, first, retreiving the
 last level jobs from the scheduler, comprising of jobs with the highest wait
 times. The rule's action variable then specifies the algorithm to be used for
@@ -238,8 +239,8 @@ requests the access to the virtual node, and subsequently provides the necessary
 information to the scheduler.
 
 The trader is also responsible for accepting or rejecting incoming trade
-requests. This functionality is outlined in the yellow section in \figref{fig1}
-and is detailed in the following algorithm: 
+requests. This functionality is outlined in the yellow section in figure \ref{fig:fig1}
+and is detailed in the algorithm in figure~\ref{incoming}.
 
 \begin{figure}[H]
 \begin{algorithm}[H]
@@ -264,7 +265,8 @@ and is detailed in the following algorithm:
   \EndProcedure
 \end{algorithmic}
 \end{algorithm}
-\caption{Incoming Trading Algorithm}
+\caption{Incoming trading algorithm.}
+\label{incoming}
 \end{figure}
 
 After receiving a trade request as a contract from other traders, the trader
@@ -272,7 +274,7 @@ first verfies if there are sufficient resources in the cluster to fulfill the
 trade. Thereafter, the trader evaluates the request against a series of trading
 policies. These are analogous to the rules governing requests broadcasted. They
 dictate how the trader responds to received resource requests. The structure of
-a policy is outlined as follows:
+a policy is outlined in figure~\ref{policy}.
 
 \begin{figure}[H]
   \begin{lstlisting}[language=go]
@@ -282,7 +284,8 @@ a policy is outlined as follows:
       ApproveRequest(request) bool 
     } 
   \end{lstlisting}
-  \caption{Policy implements an ApproveRequest method}
+  \caption{Policy implements an ApproveRequest method.}
+  \label{policy}
 \end{figure}
 
 Conditions are a set of variables that specify the acceptable thresholds
@@ -323,11 +326,12 @@ running the jobs, adding and removing nodes are done within the same binary.
 
 The scheduler communicates with the trader through gRPC. It implements a
 gRPC server, continously sending cluster state through a uni-directional stream.
-The state being sent is limited and only includes:
+The state \label{clusterState} being sent is limited and only includes:
 
+\begin{figure}[H]
 \begin{lstlisting}[language=go]
 type clusterState struct {
-  // Always sent 
+  // Always sent
 	MemoryUtilization float32
 	CoreUtilization   float32
 	AverageWaitTime   float64
@@ -337,6 +341,9 @@ type clusterState struct {
     ResourceCost      []uint
 }
 \end{lstlisting}
+\caption{Cluster state.}
+\label{clusterState}
+\end{figure}
 
 As for the scheduling algorithm, we implement the previously outlined delay
 scheduling with two levels, bumping jobs from $level_0$ to $level_1$ after ten
